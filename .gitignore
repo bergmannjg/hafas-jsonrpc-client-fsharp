@@ -1,0 +1,11 @@
+.vscode/
+.ionide/
+..ipynb_checkpoints/
+
+bin/
+obj/
+
+src/bin/
+src/obj/
+
+
