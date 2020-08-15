@@ -4,18 +4,19 @@
 open HafasLibrary
 open Hafas
 
-let verbose = false
-let client = startClient (HafasLibrary.Profile.Db, verbose)
+let client =
+    startClient (HafasLibrary.Profile.Db, defaultClientOptions)
 
 (*
 let p = getProfile(client)
 printfn "%A" p
 *)
 
-let idBielefeld = 
+let idBielefeld =
     getIdOfFirstStop (getLocations client "Bielefeld" None)
 
-let idBerlin = getIdOfFirstStop (getLocations client "Berlin" None)
+let idBerlin =
+    getIdOfFirstStop (getLocations client "Berlin" None)
 
 let maybeJourneys =
     match idBielefeld, idBerlin with

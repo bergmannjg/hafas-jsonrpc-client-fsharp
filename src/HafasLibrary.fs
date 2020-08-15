@@ -146,14 +146,23 @@ let getJourneySummary (journeys: Journey) =
     else
         None
 
-let startClient (profile: Profile, verbose: bool) =
-    // debug params: --inspect-brk
+type ClientOptions =
+    {
+      /// path to node executable
+      node: string
+      /// path of scriptfile
+      script: string
+      /// show transfer message
+      verbose: bool }
+
+let defaultClientOptions =
+    { node = "/usr/bin/node"
+      script = "../hafas-jsonrpc-server/build/index.js"
+      verbose = false }
+
+let startClient (profile: Profile, options: ClientOptions) =
     let client =
-        Client
-            ("/usr/bin/node",
-             "/home/bergmann/projects/hafas-jsonrpc-server/build/index.js "
-             + profile.ToString(),
-             verbose)
+        Client(options.node, options.script + " " + profile.ToString(), options.verbose)
 
     client.Start()
     client
