@@ -63,11 +63,14 @@ let private defaultJsonReadOptions: LSP.Json.Ser.JsonReadOptions =
 let parseStops =
     LSP.Json.Ser.deserializerFactory<Stop []> defaultJsonReadOptions
 
-let parsProfile =
+let parseProfile =
     LSP.Json.Ser.deserializerFactory<Profile> defaultJsonReadOptions
 
 let parseJourneys =
     LSP.Json.Ser.deserializerFactory<Journeys> defaultJsonReadOptions
+
+let parseTrip =
+    LSP.Json.Ser.deserializerFactory<Trip> defaultJsonReadOptions
 
 let parseResponse (v: JsonValue) =
     try

@@ -15,5 +15,6 @@
     <PackageReference Include="Google.DataTable.Net.Wrapper" Version="4.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="XPlot.GoogleCharts" Version="3.0.1" />
+    <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 </Project>

@@ -10,8 +10,8 @@ F# client and node server can run on Linux and Windows.
 
 Example use cases for the client library:
 
-* use with F# Interactive in this [script](./hafas-example.fsx)
-* use in a [Jupyter Notebook](https://jupyter.org/) app with this [document](./hafas-example.ipynb).
+* with F# Interactive in this [script](./hafas-example.fsx)
+* in a [Jupyter Notebook](https://jupyter.org/) app with this [document](./hafas-example.ipynb) using the new [.net-fsharp kernel](https://github.com/dotnet/interactive).
 
 ## Configuration of node server app
 

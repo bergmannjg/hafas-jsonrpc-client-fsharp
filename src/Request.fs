@@ -8,19 +8,17 @@ type Request<'a> =
       method: string
       ``params``: 'a }
 
-type LocationParams =
-    { name: string
-      options: LocationsOptions }
-
-type LocationRequest = Request<LocationParams>
-
-type ProfileRequest = Request<string>
-
 let private writeProducts (v: Products option): string option = None
 
 let private defaultJsonWriteOptions: LSP.Json.Ser.JsonWriteOptions =
     { customWriters = [ writeProducts ]
       filterNoneValue = true }
+
+//
+// ProfileRequest
+//
+
+type ProfileRequest = Request<string>
 
 let serializeProfileRequest () =
     let req =
@@ -33,6 +31,16 @@ let serializeProfileRequest () =
         LSP.Json.Ser.serializerFactory<ProfileRequest> defaultJsonWriteOptions
 
     serializer req
+
+//
+// LocationsRequest
+//
+
+type LocationParams =
+    { name: string
+      options: LocationsOptions }
+
+type LocationRequest = Request<LocationParams>
 
 let serializeLocationsRequest (p: LocationParams) =
     let req =
@@ -47,6 +55,10 @@ let serializeLocationsRequest (p: LocationParams) =
     serializer req
 
 let createLocationParams (name: string) (options: LocationsOptions) = { name = name; options = options }
+
+//
+// JourneyRequest
+//
 
 type JourneyParams =
     { from: string
@@ -67,7 +79,35 @@ let serializeJourneysRequest (p: JourneyParams) =
 
     serializer req
 
-let createJourneysOptions (from: string) (``to``: string) (options: JourneysOptions) =
+let createJourneyParams (from: string) (``to``: string) (options: JourneysOptions) =
     { from = from
       ``to`` = ``to``
+      options = options }
+
+//
+// JourneyRequest
+//
+
+type TripParams =
+    { id: string
+      name: string
+      options: TripOptions }
+
+type TripRequest = Request<TripParams>
+
+let serializeTripRequest (p: TripParams) =
+    let req =
+        { jsonrpc = "2.0"
+          id = Some 0
+          method = "trip"
+          ``params`` = p }
+
+    let serializer =
+        LSP.Json.Ser.serializerFactory<TripRequest> defaultJsonWriteOptions
+
+    serializer req
+
+let createTripParams (id: string) (name: string) (options: TripOptions) =
+    { id = id
+      name = name
       options = options }

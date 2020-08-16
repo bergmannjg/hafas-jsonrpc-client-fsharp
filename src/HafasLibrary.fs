@@ -53,29 +53,22 @@ let getProfile (client: Client) =
         client.SendRequest(serializeProfileRequest ())
         let! response = client.Receive()
 
-        match parseResponse (JsonValue.Parse response) with
-        | Some result ->
-            let p = parsProfile result
-            return Some p
-        | _ -> return None
+        return (parseResponse (JsonValue.Parse response))
+               |> Option.map (parseProfile)
     }
     |> Async.RunSynchronously
 
 let getLocations (client: Client) (name: string) (options: LocationsOptions option) =
     let realoptions =
-        match options with
-        | Some o -> o
-        | None -> defaultLocationsOptions
+        options
+        |> Option.defaultValue defaultLocationsOptions
 
     async {
         client.SendRequest(serializeLocationsRequest (createLocationParams name realoptions))
         let! response = client.Receive()
 
-        match parseResponse (JsonValue.Parse response) with
-        | Some result ->
-            let stops = parseStops result
-            return Some stops
-        | _ -> return None
+        return (parseResponse (JsonValue.Parse response))
+               |> Option.map (parseStops)
     }
     |> Async.RunSynchronously
 
@@ -89,7 +82,7 @@ let defaultJourneysOptions =
       arrival = None
       earlierThan = None
       laterThan = None
-      results = None
+      results = Some 3
       via = None
       stopovers = None
       transfers = None
@@ -110,19 +103,15 @@ let defaultJourneysOptions =
 
 let getJourneys (client: Client) (from: string) (``to``: string) (options: JourneysOptions option) =
     let realoptions =
-        match options with
-        | Some o -> o
-        | None -> defaultJourneysOptions
+        options
+        |> Option.defaultValue defaultJourneysOptions
 
     async {
-        client.SendRequest(serializeJourneysRequest (createJourneysOptions from ``to`` realoptions))
+        client.SendRequest(serializeJourneysRequest (createJourneyParams from ``to`` realoptions))
         let! response = client.Receive()
 
-        match parseResponse (JsonValue.Parse response) with
-        | Some result ->
-            let journeys = parseJourneys result
-            return Some journeys
-        | _ -> return None
+        return (parseResponse (JsonValue.Parse response))
+               |> Option.map (parseJourneys)
     }
     |> Async.RunSynchronously
 
@@ -131,10 +120,10 @@ let getName (o: U2<Station, Stop>) =
     | U2.Case1 station -> station.name
     | U2.Case2 stop -> stop.name
 
-let getJourneySummary (journeys: Journey) =
-    if journeys.legs.Length > 0 then
-        let legO = journeys.legs.[0]
-        let legD = journeys.legs.[journeys.legs.Length - 1]
+let getJourneySummary (journey: Journey) =
+    if journey.legs.Length > 0 then
+        let legO = journey.legs.[0]
+        let legD = journey.legs.[journey.legs.Length - 1]
         match (getName legO.origin), legO.plannedDeparture, (getName legD.destination), legD.plannedArrival with
         | Some o, Some dep, Some d, Some ar ->
             Some
@@ -145,6 +134,41 @@ let getJourneySummary (journeys: Journey) =
         | _ -> None
     else
         None
+
+let defaultTripOptions =
+    { stopovers = None
+      polyline = None
+      subStops = None
+      entrances = None
+      remarks = None
+      language = Some "de" }
+
+let getTrip (client: Client) (id: string) (name: string) (options: TripOptions option) =
+    let realoptions =
+        options |> Option.defaultValue defaultTripOptions
+
+    async {
+        client.SendRequest(serializeTripRequest (createTripParams id name realoptions))
+        let! response = client.Receive()
+
+        return (parseResponse (JsonValue.Parse response))
+               |> Option.map (parseTrip)
+    }
+    |> Async.RunSynchronously
+
+let getTripSummary (maybeTrip: Trip option) =
+    maybeTrip
+    |> Option.map (fun trip ->
+        match (getName trip.origin), trip.plannedDeparture, (getName trip.destination), trip.plannedArrival with
+        | Some o, Some dep, Some d, Some ar ->
+            Some
+                { origin = o
+                  departure = dep
+                  destination = d
+                  arrival = ar }
+        | _ -> None)
+    |> Option.flatten
+
 
 type ClientOptions =
     {
