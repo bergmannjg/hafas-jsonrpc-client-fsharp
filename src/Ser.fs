@@ -1,4 +1,7 @@
 // see https://github.com/fsprojects/fsharp-language-server/blob/master/src/LSP/Ser.fs
+// added:
+//   deserialize array and double
+//   JsonWriteOptions filterNoneValue
 module LSP.Json.Ser
 
 open System
@@ -237,7 +240,7 @@ let rec private deserializer<'T> (options: JsonReadOptions, t: Type): JsonValue 
                 let parse = deserializeInner j
                 box(makeOption(innerType, Some parse))
     elif FSharpType.IsRecord t then 
-        let fields = FSharpType.GetRecordFields(t)
+        let fields = FSharpType.GetRecordFields(t) |> Array.filter (fun f -> f.PropertyType.Name <> t.Name)
         let readers = [|for f in fields do yield fieldDeserializer(options, f)|]
         fun j -> 
             let array = [| for field, reader in readers do 

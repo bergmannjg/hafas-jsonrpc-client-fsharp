@@ -34,6 +34,12 @@ let private getTypeProperty (v: JsonValue): string option =
         | _ -> None
     | _ -> None
 
+/// delayed deserialization because deserializer cannot handle recursive types 
+let private parseU1StationFromJsonValue (v: JsonValue): U1<Station> =
+    match getTypeProperty v with
+    | Some "station" -> U1.Case1(parseStation v)
+    | _ -> raise (Exception(sprintf "Don't know how to deserialize %A from JSON" v))
+
 let private parseU2StationStopFromJsonValue (v: JsonValue): U2<Station, Stop> =
     match getTypeProperty v with
     | Some "station" -> U2.Case1(parseStation v)
@@ -56,6 +62,7 @@ let private parseU3StationStopLocationFromJsonValue (v: JsonValue): U3<Station, 
 let private defaultJsonReadOptions: LSP.Json.Ser.JsonReadOptions =
     { customReaders =
           [ parseProductTypeModeFromString
+            parseU1StationFromJsonValue
             parseU2StationStopFromJsonValue
             parseU3StationStopObjFromJsonValue
             parseU3StationStopLocationFromJsonValue ] }
