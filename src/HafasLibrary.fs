@@ -2,7 +2,6 @@ module HafasLibrary
 
 open System
 open Client
-open FSharp.Data
 open Request
 open Response
 open Hafas
@@ -53,8 +52,7 @@ let getProfile (client: Client) =
         client.SendRequest(serializeProfileRequest ())
         let! response = client.Receive()
 
-        return (parseResponse (JsonValue.Parse response))
-               |> Option.map (parseProfile)
+        return parseProfileResponse response
     }
     |> Async.RunSynchronously
 
@@ -67,14 +65,17 @@ let getLocations (client: Client) (name: string) (options: LocationsOptions opti
         client.SendRequest(serializeLocationsRequest (createLocationParams name realoptions))
         let! response = client.Receive()
 
-        return (parseResponse (JsonValue.Parse response))
-               |> Option.map (parseStops)
+        return parseLocationsResponse response
     }
     |> Async.RunSynchronously
 
-let getIdOfFirstStop (stops: Stop [] option) =
-    match stops with
-    | Some realstops when realstops.Length > 0 -> Some realstops.[0].id
+let getIdOfFirstStop (response: LocationsResponse option) =
+    match response with
+    | Some realstops when realstops.Length > 0 ->
+        match realstops.[0] with
+        | Station station -> station.id
+        | Stop stop -> Some stop.id
+        | Location location -> location.id
     | _ -> None
 
 let defaultJourneysOptions =
@@ -110,15 +111,14 @@ let getJourneys (client: Client) (from: string) (``to``: string) (options: Journ
         client.SendRequest(serializeJourneysRequest (createJourneyParams from ``to`` realoptions))
         let! response = client.Receive()
 
-        return (parseResponse (JsonValue.Parse response))
-               |> Option.map (parseJourneys)
+        return parseJourneysResponse response
     }
     |> Async.RunSynchronously
 
-let getName (o: U2<Station, Stop>) =
+let getName (o: U2StationStop) =
     match o with
-    | U2.Case1 station -> station.name
-    | U2.Case2 stop -> stop.name
+    | U2StationStop.Station station -> station.name
+    | U2StationStop.Stop stop -> stop.name
 
 let getJourneySummary (journey: Journey) =
     if journey.legs.Length > 0 then
@@ -151,8 +151,7 @@ let getTrip (client: Client) (id: string) (name: string) (options: TripOptions o
         client.SendRequest(serializeTripRequest (createTripParams id name realoptions))
         let! response = client.Receive()
 
-        return (parseResponse (JsonValue.Parse response))
-               |> Option.map (parseTrip)
+        return parseTrip response
     }
     |> Async.RunSynchronously
 

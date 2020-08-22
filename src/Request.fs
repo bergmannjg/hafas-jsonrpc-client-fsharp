@@ -1,18 +1,14 @@
 module Request
 
 open Hafas
+open System.Text.Json
+open System.Text.Json.Serialization
 
 type Request<'a> =
     { jsonrpc: string
       id: int option
       method: string
       ``params``: 'a }
-
-let private writeProducts (v: Products option): string option = None
-
-let private defaultJsonWriteOptions: LSP.Json.Ser.JsonWriteOptions =
-    { customWriters = [ writeProducts ]
-      filterNoneValue = true }
 
 //
 // ProfileRequest
@@ -27,10 +23,11 @@ let serializeProfileRequest () =
           method = "profile"
           ``params`` = "null" }
 
-    let serializer =
-        LSP.Json.Ser.serializerFactory<ProfileRequest> defaultJsonWriteOptions
+    let jsonOptions =
+        JsonSerializerOptions(IgnoreNullValues = true)
 
-    serializer req
+    jsonOptions.Converters.Add(JsonFSharpConverter())
+    JsonSerializer.Serialize<ProfileRequest>(req, jsonOptions)
 
 //
 // LocationsRequest
@@ -49,10 +46,11 @@ let serializeLocationsRequest (p: LocationParams) =
           method = "locations"
           ``params`` = p }
 
-    let serializer =
-        LSP.Json.Ser.serializerFactory<LocationRequest> defaultJsonWriteOptions
+    let jsonOptions =
+        JsonSerializerOptions(IgnoreNullValues = true)
 
-    serializer req
+    jsonOptions.Converters.Add(JsonFSharpConverter())
+    JsonSerializer.Serialize<LocationRequest>(req, jsonOptions)
 
 let createLocationParams (name: string) (options: LocationsOptions) = { name = name; options = options }
 
@@ -74,10 +72,11 @@ let serializeJourneysRequest (p: JourneyParams) =
           method = "journeys"
           ``params`` = p }
 
-    let serializer =
-        LSP.Json.Ser.serializerFactory<JourneyRequest> defaultJsonWriteOptions
+    let jsonOptions =
+        JsonSerializerOptions(IgnoreNullValues = true)
 
-    serializer req
+    jsonOptions.Converters.Add(JsonFSharpConverter())
+    JsonSerializer.Serialize<JourneyRequest>(req, jsonOptions)
 
 let createJourneyParams (from: string) (``to``: string) (options: JourneysOptions) =
     { from = from
@@ -102,10 +101,11 @@ let serializeTripRequest (p: TripParams) =
           method = "trip"
           ``params`` = p }
 
-    let serializer =
-        LSP.Json.Ser.serializerFactory<TripRequest> defaultJsonWriteOptions
+    let jsonOptions =
+        JsonSerializerOptions(IgnoreNullValues = true)
 
-    serializer req
+    jsonOptions.Converters.Add(JsonFSharpConverter())
+    JsonSerializer.Serialize<TripRequest>(req, jsonOptions)
 
 let createTripParams (id: string) (name: string) (options: TripOptions) =
     { id = id

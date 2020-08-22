@@ -7,8 +7,6 @@ type Promise<'T> =
     abstract _catch: onrejected:option<obj -> 'T> -> Promise<'T>
     abstract _then: onfulfilled:option<'T -> 'TResult> * onrejected:option<obj -> 'TResult> -> Promise<'TResult>
 
-type U1<'a> = Case1 of 'a
-
 type U2<'a, 'b> =
     | Case1 of 'a
     | Case2 of 'b
@@ -18,13 +16,26 @@ type U3<'a, 'b, 'c> =
     | Case2 of 'b
     | Case3 of 'c
 
+type U2StopLocation =
+    | Stop of Stop
+    | Location of Location
+
+type U2StationStop =
+    | Station of Station
+    | Stop of Stop
+
+type U3StationStopLocation =
+    | Station of Station
+    | Stop of Stop
+    | Location of Location
+
 
 /// A ProductType relates to how a means of transport "works" in local context.
 /// Example: Even though S-Bahn and U-Bahn in Berlin are both trains, they have different operators, service patterns,
 /// stations and look different. Therefore, they are two distinct products subway and suburban.
 type ProductType =
     { id: string
-      mode: ProductTypeMode
+      mode: string
       name: string
       short: string
       bitmasks: array<int>
@@ -43,7 +54,7 @@ type Profile =
       journeysWalkingSpeed: bool option }
 /// A location object is used by other items to indicate their locations.
 type Location =
-    { ``type``: string
+    { ``type``: string option
       id: string option
       name: string option
       poi: bool option
@@ -69,10 +80,10 @@ type ReisezentrumOpeningHours =
 /// Whereas a stop usually specifies a location, a station often is a broader area
 /// that may span across multiple levels or buildings.
 type Station =
-    { ``type``: string
+    { ``type``: string option
       id: string option
       name: string option
-      station: U1<Station> option
+      station: Station option
       location: Location option
       products: Products option
       isMeta: bool option
@@ -80,7 +91,7 @@ type Station =
       regions: array<string> option
       facilities: Facilities option
       reisezentrumOpeningHours: ReisezentrumOpeningHours option
-      stops: array<U3<Station, Stop, Location>> option
+      stops: array<U3StationStopLocation> option
       entrances: array<Location> option
       transitAuthority: string option
       distance: float option }
@@ -89,7 +100,7 @@ type Ids = Map<string, string>
 /// A stop is a single small point or structure at which vehicles stop.
 /// A stop always belongs to a station. It may for example be a sign, a basic shelter or a railway platform.
 type Stop =
-    { ``type``: string
+    { ``type``: string option
       id: string
       name: string option
       station: Station option
@@ -105,14 +116,14 @@ type Stop =
       distance: float option }
 /// A region is a group of stations, for example a metropolitan area or a geographical or cultural region.
 type Region =
-    { ``type``: string
+    { ``type``: string option
       id: string
       name: string
       /// station ids
       stations: array<string> }
 
 type Line =
-    { ``type``: string
+    { ``type``: string option
       id: string option
       name: string option
       adminCode: string option
@@ -120,7 +131,7 @@ type Line =
       additionalName: string option
       product: string option
       ``public``: bool option
-      mode: ProductTypeMode option
+      mode: string option
       /// routes ids
       routes: array<string> option
       operator: Operator option
@@ -131,10 +142,10 @@ type Line =
       symbol: string option }
 /// A route represents a single set of stations, of a single line.
 type Route =
-    { ``type``: string
+    { ``type``: string option
       id: string
       line: string
-      mode: ProductTypeMode
+      mode: string
       /// stop ids
       stops: array<string> }
 
@@ -150,41 +161,41 @@ type ArrivalDeparture =
 /// This one tries to balance the amount of data and consumability.
 /// It is specifically geared towards urban public transport, with frequent trains and homogenous travels.
 type Schedule =
-    { ``type``: string
+    { ``type``: string option
       id: string
       route: string
-      mode: ProductTypeMode
+      mode: string
       sequence: array<ArrivalDeparture>
       /// array of Unix timestamps
       starts: array<string> }
 
 type Operator =
-    { ``type``: string
+    { ``type``: string option
       id: string
       name: string }
 
 type Hint =
-    { ``type``: string
+    { ``type``: string option
       code: string option
       summary: string option
       text: string
       tripId: string option }
 
 type Geometry =
-    { ``type``: string
+    { ``type``: string option
       coordinates: array<float> }
 
 type Feature =
-    { ``type``: string
-      properties: U3<Station, Stop, obj> option
+    { ``type``: string option
+      properties: U2StationStop option
       geometry: Geometry }
 
 type FeatureCollection =
-    { ``type``: string
+    { ``type``: string option
       features: array<Feature> }
 /// A stopover represents a vehicle stopping at a stop/station at a specific time.
 type StopOver =
-    { stop: U2<Station, Stop>
+    { stop: U2StationStop
       /// null, if last stopOver of trip
       departure: string option
       departureDelay: float option
@@ -207,8 +218,8 @@ type StopOver =
 /// Trip – a vehicle stopping at a set of stops at specific times
 type Trip =
     { id: string
-      origin: U2<Station, Stop>
-      destination: U2<Station, Stop>
+      origin: U2StationStop
+      destination: U2StationStop
       departure: string option
       plannedDeparture: string option
       prognosedArrival: string option
@@ -250,7 +261,7 @@ type Alternative =
     { tripId: string
       direction: string option
       line: Line option
-      stop: U2<Station, Stop> option
+      stop: U2StationStop option
       ``when``: string option
       plannedWhen: string option
       prognosedWhen: string option
@@ -267,8 +278,8 @@ type Alternative =
 /// Leg of journey
 type Leg =
     { tripId: string option
-      origin: U2<Station, Stop>
-      destination: U2<Station, Stop>
+      origin: U2StationStop
+      destination: U2StationStop
       departure: string option
       plannedDeparture: string option
       prognosedArrival: string option
@@ -305,7 +316,7 @@ type ScheduledDays = Map<string, bool>
 /// A journey is a computed set of directions to get from A to B at a specific time.
 /// It would typically be the result of a route planning algorithm.
 type Journey =
-    { ``type``: string
+    { ``type``: string option
       legs: array<Leg>
       refreshToken: string option
       remarks: array<Hint> option
@@ -320,11 +331,11 @@ type Journeys =
 
 type Duration =
     { duration: float
-      stations: array<U3<Station, Stop, Location>> }
+      stations: array<U3StationStopLocation> }
 
 type Frame =
-    { origin: U2<Stop, Location>
-      destination: U2<Stop, Location>
+    { origin: U2StopLocation
+      destination: U2StopLocation
       t: float option }
 
 type Movement =
@@ -517,7 +528,7 @@ type RadarOptions =
       /// nr of frames to compute
       frames: float option
       /// optionally an object of booleans
-      products: U2<bool, obj> option
+      products: Products option
       /// compute frames for the next n seconds
       duration: float option
       /// parse & expose sub-stops of stations?
@@ -542,11 +553,11 @@ type HafasClient =
       /// Retrieves arrivals
       arrivals: (U2<string, Station> -> DeparturesArrivalsOptions option -> Promise<array<Alternative>>)
       /// Retrieves locations or stops
-      locations: (string -> LocationsOptions option -> Promise<array<U3<Station, Stop, Location>>>)
+      locations: (string -> LocationsOptions option -> Promise<array<U3StationStopLocation>>)
       /// Retrieves information about a stop
-      stop: (string -> StopOptions option -> Promise<U3<Station, Stop, Location>>)
+      stop: (string -> StopOptions option -> Promise<U3StationStopLocation>)
       /// Retrieves nearby stops from location
-      nearby: (Location -> NearByOptions option -> Promise<array<U3<Station, Stop, Location>>>)
+      nearby: (Location -> NearByOptions option -> Promise<array<U3StationStopLocation>>)
       /// Retrieves stations reachable within a certain time from a location
       reachableFrom: (Location -> ReachableFromOptions option -> Promise<array<Duration>>) option
       /// Retrieves all vehicles currently in an area.

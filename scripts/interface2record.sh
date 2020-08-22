@@ -20,9 +20,6 @@ type Promise<'T> =
     abstract _catch: onrejected:option<obj -> 'T> -> Promise<'T>
     abstract _then: onfulfilled:option<'T -> 'TResult> * onrejected:option<obj -> 'TResult> -> Promise<'TResult>
 
-type U1<'a> =
-  | Case1 of 'a
-
 type U2<'a,'b> =
   | Case1 of 'a
   | Case2 of 'b
@@ -32,29 +29,46 @@ type U3<'a,'b,'c> =
   | Case2 of 'b
   | Case3 of 'c
 
+type U2StopLocation =
+    | Stop of Stop
+    | Location of Location
+
+type U2StationStop =
+    | Station of Station
+    | Stop of Stop
+
+type U3StationStopLocation =
+    | Station of Station
+    | Stop of Stop
+    | Location of Location
+
 EndOfMessage
 
 sed '0,/^module CreateClient/d' < ${INPUTFILE} |
     sed -E -e ':a;N;$!ba;s/t\n\n/t\x7d\n/g' | # insert '}' to end record
-		 sed -e 's/ =/ =\x7b/' | # insert '{' to start record
-		 sed -e 's/abstract//' |
-		 sed -e 's/with get, set//' |
-		 sed -e 's/ReadonlyArray/array/' |
-		 sed -e 's/ResizeArray/array/' |
-		 sed -e 's/..AllowNullLiteral..//' |
-		 sed -e 's/Item: product:/Item:/' |
-		 sed -e 's/Item: id:/Item:/' |
-		 sed -e 's/Item: day:/Item:/' |
-		 sed -e 's/bitmasks:\s*array.float./bitmasks: array<int>/' | # change float to int
-		 sed -e 's/results:\s*float/results: int/' |
-		 sed -e 's/transferTime:\s*float/transferTime: int/' |
-		 sed -e 's/\[.*Emit.*\]//' |
-		 sed -e 's/ProductTypeMode =\x7b/ProductTypeMode =/' |
-		 sed -E -e ':a;N;$!ba;s/Ids =.\n\s+Item\: string -> string../Ids = Map<string,string>/g' | # change index types to maps
-		 sed -E -e ':a;N;$!ba;s/Products =.\n\s+Item\: string -> bool../Products = Map<string,bool>/g' |
-		 sed -E -e ':a;N;$!ba;s/ScheduledDays =.\n\s+Item\: string -> bool../ScheduledDays = Map<string,bool>/g' |
-		 sed -E -e ':a;N;$!ba;s/Facilities =.\n\s+Item\: string -> U2<string, bool>../Facilities = Map<string, string>/g' |
-		 sed -e 's/type .*ProductTypeMode =/type ProductTypeMode =/' >> ${OUTPUTFILE}
-
-
-echo 'todo: change recursive types, i.e. station: Station to station: U1<Station>'
+	sed -e 's/ =/ =\x7b/' | # insert '{' to start record
+	sed -e 's/abstract//' |
+	sed -e 's/with get, set//' |
+	sed -e 's/ReadonlyArray/array/' |
+	sed -e 's/ResizeArray/array/' |
+	sed -e 's/..AllowNullLiteral..//' |
+	sed -e 's/Item: product:/Item:/' |
+	sed -e 's/Item: id:/Item:/' |
+	sed -e 's/Item: day:/Item:/' |
+	sed -e 's/mode: ProductTypeMode/mode: string/' |
+	sed -e 's/..type..: string/``type``: string option/' |
+	sed -e 's/U3.Station, Stop, Location./U3StationStopLocation/' |
+	sed -e 's/U3.Station, Stop, obj./U2StationStop/' |
+	sed -e 's/U2.Station, Stop./U2StationStop/' |
+	sed -e 's/U2.Stop, Location./U2StopLocation/' |
+	sed -e 's/U2.bool, obj./Products/' |
+	sed -e 's/bitmasks:\s*array.float./bitmasks: array<int>/' | # change float to int
+	sed -e 's/results:\s*float/results: int/' |
+	sed -e 's/transferTime:\s*float/transferTime: int/' |
+	sed -e 's/\[.*Emit.*\]//' |
+	sed -e 's/ProductTypeMode =\x7b/ProductTypeMode =/' |
+	sed -E -e ':a;N;$!ba;s/Ids =.\n\s+Item\: string -> string../Ids = Map<string,string>/g' | # change index types to maps
+	sed -E -e ':a;N;$!ba;s/Products =.\n\s+Item\: string -> bool../Products = Map<string,bool>/g' |
+	sed -E -e ':a;N;$!ba;s/ScheduledDays =.\n\s+Item\: string -> bool../ScheduledDays = Map<string,bool>/g' |
+	sed -E -e ':a;N;$!ba;s/Facilities =.\n\s+Item\: string -> U2<string, bool>../Facilities = Map<string, string>/g' |
+	sed -e 's/type .*ProductTypeMode =/type ProductTypeMode =/' >> ${OUTPUTFILE}

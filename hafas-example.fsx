@@ -1,4 +1,4 @@
-#r "../../.nuget/packages/fsharp.data/3.3.3/lib/netstandard2.0/FSharp.Data.dll"
+#r "../../.nuget/packages/fsharp.systemtextjson/0.12.12/lib/netstandard2.0/FSharp.SystemTextJson.dll"
 #r "./src/bin/Debug/netstandard2.1/HafasJsonRpcClient.dll"
 
 open HafasLibrary
@@ -6,7 +6,7 @@ open Hafas
 
 let client =
     startClient
-        (HafasLibrary.Profile.Db,
+        (Db,
          { defaultClientOptions with
                verbose = false })
 
@@ -47,19 +47,16 @@ let maybeTripIds =
     maybeJourneys
     |> Option.map (fun journeys ->
         journeys
-        |> Array.collect (fun journey -> journey.legs |> Array.map (fun j -> j.tripId)))
+        |> Array.collect (fun journey ->
+            journey.legs
+            |> Array.map (fun leg -> leg.tripId)
+            |> Array.choose id))
 
 let tripSummaries =
     match maybeTripIds with
     | Some tripIds ->
         tripIds
-        |> Array.map (fun maybeTripId ->
-            let trip =
-                match maybeTripId with
-                | Some tripId -> getTrip client tripId "ignored" None
-                | _ -> None
-
-            (getTripSummary trip))
+        |> Array.map (fun tripId -> getTripSummary (getTrip client tripId "ignored" None))
         |> Array.choose id
     | _ -> Array.empty
 

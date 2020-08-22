@@ -4,36 +4,77 @@ module test
 open NUnit.Framework
 open Response
 open FSharp.Data
+open System.Text.Json
+open System.Text.Json.Serialization
+open Hafas
+open Request
+open HafasLibrary
 
-let locationResponse = """
-[
-    {
-        "type": "stop",
-        "id": "8000036",
-        "name": "Bielefeld Hbf",
-        "location": {
-            "type": "location",
-            "id": "8000036",
-            "latitude": 52.029421,
-            "longitude": 8.532777
-        },
-        "products": {
-            "nationalExpress": true,
-            "national": true,
-            "regionalExp": true,
-            "regional": true,
-            "suburban": false,
-            "bus": true,
-            "ferry": false,
-            "subway": false,
-            "tram": true,
-            "taxi": false
-        }
-    }
-]"""
-
-let journeyResponse = """
+let jsonLocation = """
 {
+    "type": "location",
+    "id": "8000036",
+    "latitude": 52.029421,
+    "longitude": 8.532777
+}"""
+
+let jsonStop = """
+{
+    "type": "stop",
+    "id": "8000036",
+    "name": "Bielefeld Hbf",
+    "location": {
+        "type": "location",
+        "id": "8000036",
+        "latitude": 52.029421,
+        "longitude": 8.532777
+    },
+    "products": {
+        "nationalExpress": true,
+        "national": true,
+        "regionalExp": true,
+        "regional": true,
+        "suburban": false,
+        "bus": true,
+        "ferry": false,
+        "subway": false,
+        "tram": true,
+        "taxi": false
+    }
+}"""
+
+let jsonLocationResponse = """
+{"jsonrpc":"2.0","id":0,"result":
+    [
+        {
+            "type": "stop",
+            "id": "8000036",
+            "name": "Bielefeld Hbf",
+            "location": {
+                "type": "location",
+                "id": "8000036",
+                "latitude": 52.029421,
+                "longitude": 8.532777
+            },
+            "products": {
+                "nationalExpress": true,
+                "national": true,
+                "regionalExp": true,
+                "regional": true,
+                "suburban": false,
+                "bus": true,
+                "ferry": false,
+                "subway": false,
+                "tram": true,
+                "taxi": false
+            }
+        }
+    ]
+}"""
+
+let jsonJourneyResponse = """
+{"jsonrpc":"2.0","id":0,"result":
+    {
     "earlierRef": "2|OB|MT#11#357938#357920#358090#358090#0#0#485#357882#1#-2147483640#0#1#2|PDH#b4be79f6b40f68820646ba26252cd05d|RD#17082020|RT#124230|US#1",
     "laterRef": "2|OF|MT#11#357938#357938#358090#358090#0#0#485#357882#2#-2147482606#0#1#2|PDH#b4be79f6b40f68820646ba26252cd05d|RD#17082020|RT#124230|US#1",
     "journeys": [
@@ -344,6 +385,7 @@ let journeyResponse = """
             }
         }
     ]
+    }
 }
 """
 
@@ -351,17 +393,105 @@ let journeyResponse = """
 let Setup () = ()
 
 [<Test>]
-let TestLocationResponse () =
-    let stops =
-        parseStops (JsonValue.Parse locationResponse)
+let TestDeserializeLocationResponse () =
+    let options = JsonSerializerOptions()
+    options.Converters.Add
+        (JsonFSharpConverter
+            (JsonUnionEncoding.InternalTag
+             ||| JsonUnionEncoding.UnwrapRecordCases
+             ||| JsonUnionEncoding.UnwrapOption,
+             unionTagName = "type",
+             unionTagCaseInsensitive = true))
+
+    let response =
+        JsonSerializer.Deserialize<Response<array<U3StationStopLocation>>>(jsonLocationResponse, options)
+
+    let stops = response.result.Value
 
     Assert.That(stops.Length, Is.EqualTo(1))
 
 [<Test>]
-let TestJourneyResponse () =
-    let journeys =
-        parseJourneys (JsonValue.Parse journeyResponse)
+let TestDeserializeLocation () =
+    let options = JsonSerializerOptions()
+    options.Converters.Add(JsonFSharpConverter())
 
-    match journeys.journeys with
+    let location =
+        JsonSerializer.Deserialize<Location>(jsonLocation, options)
+
+    Assert.That(location.id.Value, Is.EqualTo("8000036"))
+
+    let stop =
+        JsonSerializer.Deserialize<Stop>(jsonStop, options)
+
+    Assert.That(stop.id, Is.EqualTo("8000036"))
+
+[<Test>]
+let TestSerializeLocationsOptions () =
+    let jsonOptions =
+        JsonSerializerOptions(IgnoreNullValues = true)
+
+    jsonOptions.Converters.Add(JsonFSharpConverter())
+
+    let p: LocationParams =
+        { name = "Bielefeld"
+          options = defaultLocationsOptions }
+
+    let req =
+        { jsonrpc = "2.0"
+          id = Some 0
+          method = "locations"
+          ``params`` = p }
+
+    let s =
+        JsonSerializer.Serialize<LocationRequest>(req, jsonOptions)
+
+    Assert.That
+        (s,
+         Is.EqualTo
+             ("""{"jsonrpc":"2.0","id":0,"method":"locations","params":{"name":"Bielefeld","options":{"fuzzy":true,"results":1,"language":"de"}}}"""))
+
+// [<Test>]
+let TestDeserializeU2XLocationXStop () =
+    let options = JsonSerializerOptions()
+    options.Converters.Add
+        (JsonFSharpConverter
+            (JsonUnionEncoding.InternalTag
+             ||| JsonUnionEncoding.UnwrapRecordCases
+             ||| JsonUnionEncoding.UnwrapOption,
+             unionTagName = "type",
+             unionTagCaseInsensitive = true))
+
+    let u2Loc =
+        JsonSerializer.Deserialize<U3StationStopLocation>(jsonLocation, options)
+
+    match u2Loc with
+    | Location location -> Assert.That(location.id, Is.EqualTo(Some("8000036")))
+    | _ -> Assert.Fail("xx")
+
+    let u2Stop =
+        JsonSerializer.Deserialize<U3StationStopLocation>(jsonStop, options)
+
+    match u2Stop with
+    | Stop stop ->
+        Assert.That(stop.id, Is.EqualTo("8000036"))
+        Assert.That(stop.products.Value.Count, Is.EqualTo(10))
+    | _ -> Assert.Fail("xx")
+
+[<Test>]
+let TestDeserializeJourneyResponse () =
+    let options = JsonSerializerOptions()
+    options.Converters.Add
+        (JsonFSharpConverter
+            (JsonUnionEncoding.InternalTag
+             ||| JsonUnionEncoding.UnwrapRecordCases
+             ||| JsonUnionEncoding.UnwrapOption,
+             unionTagName = "type",
+             unionTagCaseInsensitive = true))
+
+
+    let response =
+        JsonSerializer.Deserialize<Response<JourneysResponse>>(jsonJourneyResponse, options)
+
+    match response.result.Value.journeys with
     | Some arr -> Assert.That(arr.Length, Is.EqualTo(2))
     | None -> Assert.Fail()
