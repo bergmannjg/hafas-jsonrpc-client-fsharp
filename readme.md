@@ -44,7 +44,7 @@ The module Hafas contains the F# types corresponding to the the hafas-jsonrpc-se
 The types are generated from the TypeScript declaration file [hafas-client](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/hafas-client/index.d.ts) with the following steps:
 
 * F# interface types with [ts2fable](https://github.com/fable-compiler/ts2fable)
-* F# interface types to record types with the script [interface2record](./scripts/interface2record.sh).
+* F# interface types to record types with [transformer](./src/transformer).
 
 
 
