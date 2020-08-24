@@ -5,6 +5,7 @@
   <ItemGroup>
     <Compile Include="Client.fs" />
     <Compile Include="Types-Hafas.fs" />
+    <Compile Include="Serializer.fs" />
     <Compile Include="Request.fs" />
     <Compile Include="Response.fs" />
     <Compile Include="HafasLibrary.fs" />

@@ -184,6 +184,8 @@ let defaultClientOptions =
       verbose = false }
 
 let startClient (profile: Profile, options: ClientOptions) =
+    Serializer.addConverters([|Serializer.UnionConverter<ProductTypeMode>()|])
+
     let client =
         Client(options.node, options.script + " " + profile.ToString(), options.verbose)
 

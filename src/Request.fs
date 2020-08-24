@@ -1,14 +1,18 @@
 module Request
 
 open Hafas
-open System.Text.Json
-open System.Text.Json.Serialization
 
 type Request<'a> =
     { jsonrpc: string
       id: int option
       method: string
       ``params``: 'a }
+
+let req<'a> (method: string) (p: 'a) =
+    { jsonrpc = "2.0"
+      id = Some 0
+      method = method
+      ``params`` = p }
 
 //
 // ProfileRequest
@@ -17,17 +21,7 @@ type Request<'a> =
 type ProfileRequest = Request<string>
 
 let serializeProfileRequest () =
-    let req =
-        { jsonrpc = "2.0"
-          id = Some 0
-          method = "profile"
-          ``params`` = "null" }
-
-    let jsonOptions =
-        JsonSerializerOptions(IgnoreNullValues = true)
-
-    jsonOptions.Converters.Add(JsonFSharpConverter())
-    JsonSerializer.Serialize<ProfileRequest>(req, jsonOptions)
+    Serializer.Serialize<ProfileRequest>(req<string> "profile" "null")
 
 //
 // LocationsRequest
@@ -40,17 +34,7 @@ type LocationParams =
 type LocationRequest = Request<LocationParams>
 
 let serializeLocationsRequest (p: LocationParams) =
-    let req =
-        { jsonrpc = "2.0"
-          id = Some 0
-          method = "locations"
-          ``params`` = p }
-
-    let jsonOptions =
-        JsonSerializerOptions(IgnoreNullValues = true)
-
-    jsonOptions.Converters.Add(JsonFSharpConverter())
-    JsonSerializer.Serialize<LocationRequest>(req, jsonOptions)
+    Serializer.Serialize<LocationRequest>(req<LocationParams> "locations" p)
 
 let createLocationParams (name: string) (options: LocationsOptions) = { name = name; options = options }
 
@@ -66,17 +50,7 @@ type JourneyParams =
 type JourneyRequest = Request<JourneyParams>
 
 let serializeJourneysRequest (p: JourneyParams) =
-    let req =
-        { jsonrpc = "2.0"
-          id = Some 0
-          method = "journeys"
-          ``params`` = p }
-
-    let jsonOptions =
-        JsonSerializerOptions(IgnoreNullValues = true)
-
-    jsonOptions.Converters.Add(JsonFSharpConverter())
-    JsonSerializer.Serialize<JourneyRequest>(req, jsonOptions)
+    Serializer.Serialize<JourneyRequest>(req<JourneyParams> "journeys" p)
 
 let createJourneyParams (from: string) (``to``: string) (options: JourneysOptions) =
     { from = from
@@ -95,17 +69,7 @@ type TripParams =
 type TripRequest = Request<TripParams>
 
 let serializeTripRequest (p: TripParams) =
-    let req =
-        { jsonrpc = "2.0"
-          id = Some 0
-          method = "trip"
-          ``params`` = p }
-
-    let jsonOptions =
-        JsonSerializerOptions(IgnoreNullValues = true)
-
-    jsonOptions.Converters.Add(JsonFSharpConverter())
-    JsonSerializer.Serialize<TripRequest>(req, jsonOptions)
+    Serializer.Serialize<TripRequest>(req<TripParams> "trip" p)
 
 let createTripParams (id: string) (name: string) (options: TripOptions) =
     { id = id
