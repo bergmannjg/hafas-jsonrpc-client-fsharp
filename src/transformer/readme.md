@@ -1,5 +1,7 @@
 # Transform F# interface types to record types
 
+Transform F# interface types from the ts2fable generated [file](https://github.com/bergmannjg/hafas-client-fable/blob/master/src/HafasClientTypes.fs) to record types in this [file](../Types-Hafas.fs).
+
 ## Example
 
 The following part of a TypeScript declaration file

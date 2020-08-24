@@ -35,7 +35,7 @@ type U3StationStopLocation =
 /// stations and look different. Therefore, they are two distinct products subway and suburban.
 type ProductType =
     { id: string
-      mode: string
+      mode: ProductTypeMode
       name: string
       short: string
       bitmasks: array<int>
@@ -131,7 +131,7 @@ type Line =
       additionalName: string option
       product: string option
       ``public``: bool option
-      mode: string option
+      mode: ProductTypeMode option
       /// routes ids
       routes: array<string> option
       operator: Operator option
@@ -145,7 +145,7 @@ type Route =
     { ``type``: string option
       id: string
       line: string
-      mode: string
+      mode: ProductTypeMode
       /// stop ids
       stops: array<string> }
 
@@ -164,7 +164,7 @@ type Schedule =
     { ``type``: string option
       id: string
       route: string
-      mode: string
+      mode: ProductTypeMode
       sequence: array<ArrivalDeparture>
       /// array of Unix timestamps
       starts: array<string> }
@@ -562,3 +562,14 @@ type HafasClient =
       reachableFrom: Location -> ReachableFromOptions option -> Promise<array<Duration>> option
       /// Retrieves all vehicles currently in an area.
       radar: BoundingBox -> RadarOptions option -> Promise<array<Movement>> option }
+
+type ProductTypeMode =
+    | Train
+    | Bus
+    | Watercraft
+    | Taxi
+    | Gondola
+    | Aircraft
+    | Car
+    | Bicycle
+    | Walking

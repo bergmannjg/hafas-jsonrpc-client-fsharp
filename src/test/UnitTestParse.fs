@@ -480,6 +480,7 @@ let TestDeserializeU2XLocationXStop () =
 [<Test>]
 let TestDeserializeJourneyResponse () =
     let options = JsonSerializerOptions()
+    options.Converters.Add(ProductTypeModeConverter())
     options.Converters.Add
         (JsonFSharpConverter
             (JsonUnionEncoding.InternalTag
@@ -487,7 +488,6 @@ let TestDeserializeJourneyResponse () =
              ||| JsonUnionEncoding.UnwrapOption,
              unionTagName = "type",
              unionTagCaseInsensitive = true))
-
 
     let response =
         JsonSerializer.Deserialize<Response<JourneysResponse>>(jsonJourneyResponse, options)
