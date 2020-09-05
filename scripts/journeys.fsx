@@ -1,14 +1,15 @@
-#r "../../.nuget/packages/fsharp.systemtextjson/0.12.12/lib/netstandard2.0/FSharp.SystemTextJson.dll"
-#r "./src/bin/Debug/netstandard2.1/HafasJsonRpcClient.dll"
+#r "../../../.nuget/packages/fsharp.systemtextjson/0.12.12/lib/netstandard2.0/FSharp.SystemTextJson.dll"
+#r "../src/bin/Debug/netstandard2.1/HafasJsonRpcClient.dll"
 
 open HafasLibrary
 open Hafas
+open BRouter
 
 let client =
     startClient
         (Db,
          { defaultClientOptions with
-               verbose = false })
+               verbose = true })
 
 (*
 let p = getProfile(client)
@@ -23,7 +24,8 @@ let maybeTo =
 
 let journeysOptions =
     { defaultJourneysOptions with
-          results = Some 2 }
+          results = Some 1
+          stopovers = Some true }
 
 let maybeJourneys =
     match maybeFrom, maybeTo with
@@ -43,21 +45,18 @@ let journeySummaries =
 
 printfn "%A" journeySummaries
 
-let maybeTripIds =
-    maybeJourneys
-    |> Option.map (fun journeys ->
-        journeys
-        |> Array.collect (fun journey ->
-            journey.legs
-            |> Array.map (fun leg -> leg.tripId)
-            |> Array.choose id))
+let maybeFirstJourney =
+    match maybeJourneys with
+    | Some journeys -> if journeys.Length > 0 then Some journeys.[0] else None
+    | _ -> None
 
-let tripSummaries =
-    match maybeTripIds with
-    | Some tripIds ->
-        tripIds
-        |> Array.map (fun tripId -> getTripSummary (getTrip client tripId "ignored" None))
-        |> Array.choose id
-    | _ -> Array.empty
+let journeyLocations =
+    match maybeFirstJourney with
+    | Some journey -> getJourneyLocations journey
+    | None -> Array.empty
 
-printfn "%A" tripSummaries
+printfn "%A" journeyLocations
+
+let uri = getUri journeyLocations
+
+printfn "%s" uri

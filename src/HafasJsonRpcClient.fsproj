@@ -8,6 +8,7 @@
     <Compile Include="Serializer.fs" />
     <Compile Include="Request.fs" />
     <Compile Include="Response.fs" />
+    <Compile Include="BRouter.fs" />
     <Compile Include="HafasLibrary.fs" />
   </ItemGroup>
   <ItemGroup>

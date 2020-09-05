@@ -5,6 +5,7 @@ open Client
 open Request
 open Response
 open Hafas
+open BRouter
 
 type Profile =
     | Bvg
@@ -32,6 +33,13 @@ type Profile =
 
 type JourneySummary =
     { origin: string
+      departure: string
+      destination: string
+      arrival: string }
+
+type TripSummary =
+    { line: string option
+      origin: string
       departure: string
       destination: string
       arrival: string }
@@ -135,8 +143,31 @@ let getJourneySummary (journey: Journey) =
     else
         None
 
+let stopover2location (stopover: StopOver) =
+    match stopover.stop with
+    | U2StationStop.Station s -> s.location
+    | U2StationStop.Stop s -> s.location
+
+let location2lonlat (loc: Location) =
+    match loc.longitude, loc.latitude with
+    | Some longitude, Some latitude ->
+        Some
+            { longitude = longitude
+              latitude = latitude }
+    | _, _ -> None
+
+let getJourneyLocations (journey: Journey) =
+    journey.legs
+    |> Array.collect (fun leg ->
+        match leg.stopovers with
+        | Some stopovers ->
+            stopovers
+            |> Array.choose stopover2location
+            |> Array.choose location2lonlat
+        | None -> Array.empty)
+
 let defaultTripOptions =
-    { stopovers = None
+    { stopovers = Some true
       polyline = None
       subStops = None
       entrances = None
@@ -158,15 +189,27 @@ let getTrip (client: Client) (id: string) (name: string) (options: TripOptions o
 let getTripSummary (maybeTrip: Trip option) =
     maybeTrip
     |> Option.map (fun trip ->
-        match (getName trip.origin), trip.plannedDeparture, (getName trip.destination), trip.plannedArrival with
-        | Some o, Some dep, Some d, Some ar ->
+        match (getName trip.origin), trip.plannedDeparture, (getName trip.destination), trip.plannedArrival, trip.line with
+        | Some o, Some dep, Some d, Some ar, Some line ->
             Some
-                { origin = o
+                { line = line.name
+                  origin = o
                   departure = dep
                   destination = d
                   arrival = ar }
         | _ -> None)
     |> Option.flatten
+
+let getTripLocations (maybeTrip: Trip option) =
+    match maybeTrip with
+    | Some trip ->
+        match trip.stopovers with
+        | Some stopovers ->
+            stopovers
+            |> Array.choose stopover2location
+            |> Array.choose location2lonlat
+        | None -> Array.empty
+    | None -> Array.empty
 
 
 type ClientOptions =
@@ -184,7 +227,7 @@ let defaultClientOptions =
       verbose = false }
 
 let startClient (profile: Profile, options: ClientOptions) =
-    Serializer.addConverters([|Serializer.UnionConverter<ProductTypeMode>()|])
+    Serializer.addConverters ([| Serializer.UnionConverter<ProductTypeMode>() |])
 
     let client =
         Client(options.node, options.script + " " + profile.ToString(), options.verbose)
