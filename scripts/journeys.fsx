@@ -1,15 +1,15 @@
-#r "../../../.nuget/packages/fsharp.systemtextjson/0.12.12/lib/netstandard2.0/FSharp.SystemTextJson.dll"
+#r "../.nuget/packages/fsharp.systemtextjson/0.12.12/lib/netstandard2.0/FSharp.SystemTextJson.dll"
 #r "../src/bin/Debug/netstandard2.1/HafasJsonRpcClient.dll"
 
 open HafasLibrary
 open Hafas
-open BRouter
 
 let client =
     startClient
         (Db,
          { defaultClientOptions with
-               verbose = true })
+               node = "/usr/local/bin/node"
+               verbose = false })
 
 (*
 let p = getProfile(client)
@@ -17,14 +17,14 @@ printfn "%A" p
 *)
 
 let maybeFrom =
-    getIdOfFirstStop (getLocations client "Bielefeld" None)
+    getIdOfFirstStop (getLocations client "Köln" None)
 
 let maybeTo =
     getIdOfFirstStop (getLocations client "Berlin" None)
 
 let journeysOptions =
     { defaultJourneysOptions with
-          results = Some 1
+          results = Some 2
           stopovers = Some true }
 
 let maybeJourneys =
@@ -44,19 +44,3 @@ let journeySummaries =
     | _ -> Array.empty
 
 printfn "%A" journeySummaries
-
-let maybeFirstJourney =
-    match maybeJourneys with
-    | Some journeys -> if journeys.Length > 0 then Some journeys.[0] else None
-    | _ -> None
-
-let journeyLocations =
-    match maybeFirstJourney with
-    | Some journey -> getJourneyLocations journey
-    | None -> Array.empty
-
-printfn "%A" journeyLocations
-
-let uri = getUri journeyLocations
-
-printfn "%s" uri

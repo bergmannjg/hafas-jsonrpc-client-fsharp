@@ -35,6 +35,9 @@ type U3StationStopLocation =
     | Stop of Stop
     | Location of Location
 
+type U2HintWarning =
+    | Hint of Hint
+    | Warning of Warning
 """
 
 let transformType str =
@@ -45,6 +48,7 @@ let transformType str =
     else if str = "U2<Station,Stop>" then "U2StationStop"
     else if str = "U3<Station,Stop,obj>" then "U2StationStop"
     else if str = "U2<bool,obj>" then "Products"
+    else if str = "U2<Hint,Warning>" then "U2HintWarning"
     else str
 
 let escapeIdent str =
