@@ -37,7 +37,7 @@ dotnet run --project src/Transformer/Transformer.fsproj  RailwayRoute RailwayRou
 
 rm -f RailwayRouteTypes.fs
 
-# rm -rf node_modules
+rm -rf node_modules
 
 dotnet build --packages ./.nuget/packages src/HafasJsonRpcClient/HafasJsonRpcClient.fsproj
 

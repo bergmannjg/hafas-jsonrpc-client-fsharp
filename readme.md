@@ -1,6 +1,6 @@
 # F# clients for JSON-RPC server
 
-F# clients for
+F# clients for the node server apps
 
 * [hafas-jsonrpc-server](https://github.com/bergmannjg/hafas-jsonrpc-server).
 * [railwayroute-jsonrpc-server](https://github.com/bergmannjg/railwayroute-jsonrpc-server).
@@ -42,9 +42,13 @@ The (de)serialization of F# types from/to JsonRpc messages is done with the foll
 
 ## F# type defintions from TypeScript declaration file
 
-The module Hafas contains the F# types corresponding to the the hafas-jsonrpc-server api.
+The types are generated from 
 
-The types are generated from the TypeScript declaration file [hafas-client](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/hafas-client/index.d.ts) with the following steps:
+* the TypeScript declaration file [hafas-client](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/hafas-client/index.d.ts) 
+* the TypeScript file [railway-routes-types](https://github.com/bergmannjg/railwaytrip-to-railwayroute/blob/master/src/db-data-railway-routes-types.ts
+)
+
+with the following steps (see [restore.sh](./scripts/restore.sh)):
 
 * F# interface types with [ts2fable](https://github.com/fable-compiler/ts2fable)
 * F# interface types to record types with [transformer](./src/transformer).
