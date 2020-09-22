@@ -125,6 +125,13 @@ type Client(exec: string, args: string, verbose: bool) =
             return response
         }
 
+    member __.SendReceive(request: string) =
+        async {
+            __.SendRequest(request)
+            return! __.Receive()
+        }
+        |> Async.RunSynchronously
+
     member __.Start() =
 
         let si = ProcessStartInfo()

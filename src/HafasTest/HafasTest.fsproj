@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HafasJsonRpcClient.fsproj" />
+    <ProjectReference Include="..\HafasJsonRpcClient\HafasJsonRpcClient.fsproj" />
   </ItemGroup>
 
 </Project>

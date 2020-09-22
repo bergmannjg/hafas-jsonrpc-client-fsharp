@@ -1,6 +1,9 @@
-# F# client for the hafas JSON-RPC server
+# F# clients for JSON-RPC server
 
-F# client for the [hafas-jsonrpc-server](https://github.com/bergmannjg/hafas-jsonrpc-server).
+F# clients for
+
+* [hafas-jsonrpc-server](https://github.com/bergmannjg/hafas-jsonrpc-server).
+* [railwayroute-jsonrpc-server](https://github.com/bergmannjg/railwayroute-jsonrpc-server).
 
 The node server app is started from the client library.
 

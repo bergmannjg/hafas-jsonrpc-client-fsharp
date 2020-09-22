@@ -56,26 +56,16 @@ let defaultLocationsOptions =
       language = Some "de" }
 
 let getProfile (client: Client) =
-    async {
-        client.SendRequest(serializeProfileRequest ())
-        let! response = client.Receive()
-
-        return parseProfileResponse response
-    }
-    |> Async.RunSynchronously
+    client.SendReceive(serializeProfileRequest ())
+    |> parseProfileResponse
 
 let getLocations (client: Client) (name: string) (options: LocationsOptions option) =
     let realoptions =
         options
         |> Option.defaultValue defaultLocationsOptions
 
-    async {
-        client.SendRequest(serializeLocationsRequest (createLocationParams name realoptions))
-        let! response = client.Receive()
-
-        return parseLocationsResponse response
-    }
-    |> Async.RunSynchronously
+    client.SendReceive(serializeLocationsRequest (createLocationParams name realoptions))
+    |> parseLocationsResponse
 
 let getIdOfFirstStop (response: LocationsResponse option) =
     match response with
@@ -115,13 +105,8 @@ let getJourneys (client: Client) (from: string) (``to``: string) (options: Journ
         options
         |> Option.defaultValue defaultJourneysOptions
 
-    async {
-        client.SendRequest(serializeJourneysRequest (createJourneyParams from ``to`` realoptions))
-        let! response = client.Receive()
-
-        return parseJourneysResponse response
-    }
-    |> Async.RunSynchronously
+    client.SendReceive(serializeJourneysRequest (createJourneyParams from ``to`` realoptions))
+    |> parseJourneysResponse
 
 let getName (o: U2StationStop) =
     match o with
@@ -178,13 +163,8 @@ let getTrip (client: Client) (id: string) (name: string) (options: TripOptions o
     let realoptions =
         options |> Option.defaultValue defaultTripOptions
 
-    async {
-        client.SendRequest(serializeTripRequest (createTripParams id name realoptions))
-        let! response = client.Receive()
-
-        return parseTrip response
-    }
-    |> Async.RunSynchronously
+    client.SendReceive(serializeTripRequest (createTripParams id name realoptions))
+    |> parseTrip
 
 let getTripSummary (maybeTrip: Trip option) =
     maybeTrip
@@ -210,7 +190,6 @@ let getTripLocations (maybeTrip: Trip option) =
             |> Array.choose location2lonlat
         | None -> Array.empty
     | None -> Array.empty
-
 
 type ClientOptions =
     {

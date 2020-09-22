@@ -32,7 +32,6 @@ type U3StationStopLocation =
 type U2HintWarning =
     | Hint of Hint
     | Warning of Warning
-    | Status of Hint
 
 /// A ProductType relates to how a means of transport "works" in local context.
 /// Example: Even though S-Bahn and U-Bahn in Berlin are both trains, they have different operators, service patterns,

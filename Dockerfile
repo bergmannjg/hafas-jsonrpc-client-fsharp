@@ -22,7 +22,7 @@ WORKDIR /usr/src/apps/hafas-jsonrpc-client-fsharp
 
 COPY ./src src/
 
-RUN dotnet build --packages ./.nuget/packages src/HafasJsonRpcClient.fsproj 
+RUN dotnet build --packages ./.nuget/packages src/HafasJsonRpcClient/HafasJsonRpcClient.fsproj 
 
 COPY ./scripts/journeys.fsx scripts/
 

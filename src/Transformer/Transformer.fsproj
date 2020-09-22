@@ -7,6 +7,8 @@
 
   <ItemGroup>
     <Compile Include="Transformer.fs" />
+    <Compile Include="HafasOptions.fs" />
+    <Compile Include="RailwayRouteOptions.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
