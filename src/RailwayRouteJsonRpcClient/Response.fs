@@ -9,5 +9,6 @@ type Response<'a> =
 type RailwayrouteResponse = RailwayRoute.RailwayRouteOfTripResult
 
 let parseRailwayrouteResponse (response: string) =
-    Serializer.Deserialize<Response<RailwayrouteResponse>>(response).result
-
+    try
+        Serializer.Deserialize<Response<RailwayrouteResponse>>(response).result
+    with ex -> None // todo

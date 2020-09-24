@@ -113,13 +113,16 @@ type Client(exec: string, args: string, verbose: bool) =
                 | Some sr ->
                     let outStream = sr.BaseStream
                     try
-                        let _, notificationString = LowLevel.read outStream
+                        let headers, notificationString = LowLevel.read outStream
                         if verbose
-                        then fprintfn stderr "[CLIENT] READING: %s" notificationString
+                        then 
+                            fprintfn stderr "[CLIENT] READING: %s" (headers.ToString())
+                            fprintfn stderr "[CLIENT] READING: %s" notificationString
                         notificationString
                     with
-                    | :? EndOfStreamException -> ""
-                    | ex -> ""
+                    | ex ->
+                        fprintfn stderr "[CLIENT] Ex: %s" (ex.ToString()) 
+                        ""
                 | _ -> ""
 
             return response

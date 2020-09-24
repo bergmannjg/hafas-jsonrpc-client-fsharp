@@ -59,6 +59,13 @@ let getProfile (client: Client) =
     client.SendReceive(serializeProfileRequest ())
     |> parseProfileResponse
 
+let getProducts (maybeProfile: Hafas.Profile option, mode: ProductTypeMode) =
+    match maybeProfile with
+    | Some profile ->
+        profile.products
+        |> Array.fold (fun (m: Map<string, bool>) p -> m.Add(p.id, p.mode = mode)) Map.empty<string, bool>
+    | None -> Map.empty<string, bool>
+
 let getLocations (client: Client) (name: string) (options: LocationsOptions option) =
     let realoptions =
         options
@@ -133,6 +140,11 @@ let stopover2location (stopover: StopOver) =
     | U2StationStop.Station s -> s.location
     | U2StationStop.Stop s -> s.location
 
+let stopover2id (stopover: StopOver) =
+    match stopover.stop with
+    | U2StationStop.Station s -> s.id
+    | U2StationStop.Stop s -> Some s.id
+
 let location2lonlat (loc: Location) =
     match loc.longitude, loc.latitude with
     | Some longitude, Some latitude ->
@@ -140,6 +152,13 @@ let location2lonlat (loc: Location) =
             { longitude = longitude
               latitude = latitude }
     | _, _ -> None
+
+let getJourneyIds (journey: Journey) =
+    journey.legs
+    |> Array.collect (fun leg ->
+        match leg.stopovers with
+        | Some stopovers -> stopovers |> Array.choose stopover2id
+        | None -> Array.empty)
 
 let getJourneyLocations (journey: Journey) =
     journey.legs

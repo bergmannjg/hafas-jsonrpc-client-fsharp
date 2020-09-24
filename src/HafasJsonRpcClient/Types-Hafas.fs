@@ -31,6 +31,7 @@ type U3StationStopLocation =
 
 type U2HintWarning =
     | Hint of Hint
+    | Status of Hint
     | Warning of Warning
 
 /// A ProductType relates to how a means of transport "works" in local context.

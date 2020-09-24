@@ -16,10 +16,12 @@ let parseLocationsResponse (response: string) =
     Serializer.Deserialize<Response<LocationsResponse>>(response).result
 
 let parseProfileResponse (response: string) =
-    Some(Serializer.Deserialize<Profile>(response))
+    Serializer.Deserialize<Response<Profile>>(response).result
 
 let parseJourneysResponse (response: string) =
-    Serializer.Deserialize<Response<JourneysResponse>>(response).result
+    try
+        Serializer.Deserialize<Response<JourneysResponse>>(response).result
+    with ex -> None // todo
 
 let parseTrip (response: string) =
     Serializer.Deserialize<Response<Trip>>(response).result

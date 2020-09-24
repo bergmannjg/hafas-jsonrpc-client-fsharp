@@ -37,6 +37,7 @@ type U3StationStopLocation =
 
 type U2HintWarning =
     | Hint of Hint
+    | Status of Hint
     | Warning of Warning
 """
 
