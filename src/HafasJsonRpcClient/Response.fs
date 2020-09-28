@@ -2,26 +2,37 @@ module Response
 
 open Hafas
 
+type Error = { code: int; message: string }
+
 type Response<'a> =
     { jsonrpc: string
       id: int option
       result: 'a option
-      error: string option }
+      error: Error option }
 
-type JourneysResponse = Journeys
+let parseResponse<'a> (response: string) =
+    try
+        let resp =
+            Serializer.Deserialize<Response<'a>>(response)
+
+        match resp.result, resp.error with
+        | Some result, _ -> Some result
+        | _, Some error ->
+            fprintfn stderr "error: %s" error.message
+            None
+        | _, _ -> None
+    with ex -> None // todo
+
+let parseProfileResponse (response: string) = parseResponse<Profile> (response)
 
 type LocationsResponse = array<U3StationStopLocation>
 
 let parseLocationsResponse (response: string) =
-    Serializer.Deserialize<Response<LocationsResponse>>(response).result
+    parseResponse<LocationsResponse> (response)
 
-let parseProfileResponse (response: string) =
-    Serializer.Deserialize<Response<Profile>>(response).result
+type JourneysResponse = Journeys
 
 let parseJourneysResponse (response: string) =
-    try
-        Serializer.Deserialize<Response<JourneysResponse>>(response).result
-    with ex -> None // todo
+    parseResponse<JourneysResponse> (response)
 
-let parseTrip (response: string) =
-    Serializer.Deserialize<Response<Trip>>(response).result
+let parseTrip (response: string) = parseResponse<Trip> (response)

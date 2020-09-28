@@ -18,6 +18,10 @@ let jsonLocation = """
     "longitude": 8.532777
 }"""
 
+let jsonErrorResponse = """
+{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": 1}
+"""
+
 let jsonStop = """
 {
     "type": "stop",
@@ -489,3 +493,20 @@ let TestDeserializeJourneyResponse () =
     match response.result.Value.journeys with
     | Some arr -> Assert.That(arr.Length, Is.EqualTo(1))
     | None -> Assert.Fail()
+
+[<Test>]
+let TestDeserializeErrorResponse () =
+    let options = JsonSerializerOptions()
+    options.Converters.Add(Serializer.UnionConverter<ProductTypeMode>())
+    options.Converters.Add
+        (JsonFSharpConverter
+            (JsonUnionEncoding.InternalTag
+             ||| JsonUnionEncoding.UnwrapRecordCases
+             ||| JsonUnionEncoding.UnwrapOption,
+             unionTagName = "type",
+             unionTagCaseInsensitive = true))
+
+    let response =
+        JsonSerializer.Deserialize<Response<LocationsResponse>>(jsonErrorResponse, options)
+
+    Assert.That(response.error.Value.code, Is.EqualTo(-32601))
