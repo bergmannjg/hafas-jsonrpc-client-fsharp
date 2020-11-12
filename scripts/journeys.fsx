@@ -1,6 +1,6 @@
-#r "../.nuget/packages/fsharp.systemtextjson/0.12.12/lib/netstandard2.0/FSharp.SystemTextJson.dll"
-#r "../src/JsonRpcClient/bin/Debug/netstandard2.1/JsonRpcClient.dll"
-#r "../src/HafasJsonRpcClient/bin/Debug/netstandard2.1/HafasJsonRpcClient.dll"
+#r "../.nuget/packages/fsharp.systemtextjson/0.14.8/lib/netstandard2.0/FSharp.SystemTextJson.dll"
+#r "../src/JsonRpcClient/bin/Debug/net5.0/JsonRpcClient.dll"
+#r "../src/HafasJsonRpcClient/bin/Debug/net5.0/HafasJsonRpcClient.dll"
 
 open HafasLibrary
 open Hafas

@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Client.fs" />
     <Compile Include="Serializer.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.SystemTextJson" Version="0.12.12" />
+    <PackageReference Include="FSharp.SystemTextJson" Version="0.14.8" />
   </ItemGroup>
 </Project>

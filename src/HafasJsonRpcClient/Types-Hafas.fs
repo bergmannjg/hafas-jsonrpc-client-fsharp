@@ -109,9 +109,8 @@ type Ids = Map<string, string>
 /// A stop always belongs to a station. It may for example be a sign, a basic shelter or a railway platform.
 type Stop = {
     ``type``: string option
-    id: string
+    id: string option
     name: string option
-    station: Station option
     location: Location option
     products: Products option
     lines: array<Line> option

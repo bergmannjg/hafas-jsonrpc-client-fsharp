@@ -79,8 +79,9 @@ let getIdOfFirstStop (response: LocationsResponse option) =
     | Some realstops when realstops.Length > 0 ->
         match realstops.[0] with
         | Station station -> station.id
-        | Stop stop -> Some stop.id
+        | Stop stop when stop.id.IsSome -> Some stop.id.Value
         | Location location -> location.id
+        | _ -> None
     | _ -> None
 
 let defaultJourneysOptions =
@@ -143,7 +144,8 @@ let stopover2location (stopover: StopOver) =
 let stopover2id (stopover: StopOver) =
     match stopover.stop with
     | U2StationStop.Station s -> s.id
-    | U2StationStop.Stop s -> Some s.id
+    | U2StationStop.Stop s when s.id.IsSome -> Some s.id.Value
+    | _ -> None
 
 let location2lonlat (loc: Location) =
     match loc.longitude, loc.latitude with

@@ -71,10 +71,11 @@ let rec private visitSnyType synType options =
 
 let private visitValSig slotSig options =
     let (SynValSig.ValSpfn (_, id, _, synType, _, _, _, xmlDoc, _, _, _)) = slotSig
-    let (XmlDoc (docLines)) = xmlDoc.ToXmlDoc()
+    let xmldoc = xmlDoc.ToXmlDoc(false, None)
 
     let lines =
-        docLines |> Array.map (fun l -> sprintf "///%s" l)
+        xmldoc.UnprocessedLines
+        |> Array.map (fun l -> sprintf "///%s" l)
 
     let doc =
         if lines.Length > 0 then (lines |> String.concat "\n") + "\n    " else ""
@@ -111,8 +112,10 @@ let private visitTypeDefn typeDefn options =
     let (SynComponentInfo.ComponentInfo (_, __, _, id, xmlDoc, _, _, _)) = typeInfo
 
     let lines = List()
-    let (XmlDoc (docLines)) = xmlDoc.ToXmlDoc()
-    lines.AddRange(docLines |> Array.map (fun l -> sprintf "///%s" l))
+    let xmlDoc = xmlDoc.ToXmlDoc(false, None)
+    lines.AddRange
+        (xmlDoc.UnprocessedLines
+         |> Array.map (fun l -> sprintf "///%s" l))
 
     let strMembers =
         match typeRepr with
@@ -143,10 +146,9 @@ let rec private visitDeclarations decls options =
     let lines = List()
     for declaration in decls do
         match declaration with
-        | SynModuleDecl.Open (longDotId, range) ->
+        | SynModuleDecl.Open (SynOpenDeclTarget.ModuleOrNamespace (longDotId, _), range) ->
             if options.prelude.IsNone then
-                let (LongIdentWithDots (id, _)) = longDotId
-                lines.Add(sprintf "open %s" (toString id))
+                lines.Add(sprintf "open %s" (toString longDotId))
         | SynModuleDecl.Types (typeDefns, range) ->
             for typeDefn in typeDefns do
                 lines.AddRange(visitTypeDefn typeDefn options)
