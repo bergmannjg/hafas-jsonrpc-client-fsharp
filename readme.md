@@ -51,7 +51,7 @@ The types are generated from
 with the following steps (see [restore.sh](./scripts/restore.sh)):
 
 * F# interface types with [ts2fable](https://github.com/fable-compiler/ts2fable)
-* F# interface types to record types with [transformer](./src/transformer).
+* F# interface types to record types with [transformer](./src/Transformer).
 
 
 
