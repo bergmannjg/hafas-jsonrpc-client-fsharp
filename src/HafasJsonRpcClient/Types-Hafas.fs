@@ -57,6 +57,9 @@ type Profile = {
     refreshJourney: bool option
     reachableFrom: bool option
     journeysWalkingSpeed: bool option
+    tripsByName: bool option
+    remarks: bool option
+    lines: bool option
 }
 /// A location object is used by other items to indicate their locations.
 type Location = {
@@ -148,6 +151,7 @@ type Line = {
     night: bool option
     nr: float option
     symbol: string option
+    directions: array<string> option
 }
 /// A route represents a single set of stations, of a single line.
 type Route = {
@@ -205,6 +209,11 @@ type Warning = {
     validFrom: string option
     validUntil: string option
     modified: string option
+    company: obj option
+    categories: array<obj option> option
+    affectedLines: array<Line> option
+    fromStops: array<obj option> option
+    toStops: array<obj option> option
 }
 type Geometry = {
     ``type``: string option
@@ -376,6 +385,12 @@ type Movement = {
     frames: array<Frame> option
     polyline: FeatureCollection option
 }
+type ServerInfo = {
+    timetableStart: string option
+    timetableEnd: string option
+    serverTime: U2<string,float> option
+    realtimeDataUpdatedAt: float option
+}
 type JourneysOptions = {
     /// departure date, undefined corresponds to Date.Now
     departure: DateTime option
@@ -471,6 +486,8 @@ type DeparturesArrivalsOptions = {
     ``when``: DateTime option
     /// only show departures heading to this station
     direction: string option
+    /// filter by line ID
+    line: string option
     /// show departures for the next n minutes
     duration: float option
     /// max. number of results; `null` means "whatever HAFAS wants"
@@ -562,6 +579,27 @@ type RadarOptions = {
     /// when
     ``when``: DateTime option
 }
+type TripsByNameOptions = {
+    /// departure date, undefined corresponds to Date.Now
+    ``when``: DateTime option
+}
+type RemarksOptions = {
+    from: U2<DateTime,float> option
+    ``to``: U2<DateTime,float> option
+    /// maximum number of remarks
+    results: int option
+    products: Products option
+    /// Language of the results
+    language: string option
+}
+type LinesOptions = {
+    /// Language of the results
+    language: string option
+}
+type ServerOptions = {
+    /// Language of the results
+    language: string option
+}
 type HafasClient = {
     /// Retrieves journeys
     journeys: U3<string,Station,Location>->U3<string,Station,Location>->JourneysOptions option->Promise<Journeys>
@@ -583,6 +621,14 @@ type HafasClient = {
     reachableFrom: Location->ReachableFromOptions option->Promise<array<Duration>> option
     /// Retrieves all vehicles currently in an area.
     radar: BoundingBox->RadarOptions option->Promise<array<Movement>> option
+    /// Retrieves trips by name.
+    tripsByName: string->TripsByNameOptions option->Promise<array<Trip>> option
+    /// Fetches all remarks known to the HAFAS endpoint
+    remarks: RemarksOptions option->Promise<array<Warning>> option
+    /// Fetches all lines known to the HAFAS endpoint
+    lines: string->LinesOptions option->Promise<array<Line>> option
+    /// Fetches meta information from the HAFAS endpoint
+    serverInfo: ServerOptions option->Promise<ServerInfo>
 }
 type ProductTypeMode = 
     | Train

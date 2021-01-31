@@ -57,6 +57,7 @@ let escapeIdent str =
     else if str = "default" then "``" + str + "``"
     else if str = "when" then "``" + str + "``"
     else if str = "public" then "``" + str + "``"
+    else if str = "to" then "``" + str + "``"
     else str
 
 let excludeTypes = [| "ReadonlyArray"; "IExports" |]
