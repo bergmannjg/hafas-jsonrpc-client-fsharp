@@ -3,6 +3,7 @@ module rec Hafas
 
 open System
 
+// type Promise<'T> = Async<'T>
 type Promise<'T> =
     abstract _catch: onrejected:option<obj -> 'T> -> Promise<'T>
     abstract _then: onfulfilled:option<'T -> 'TResult> * onrejected:option<obj -> 'TResult> -> Promise<'TResult>
@@ -19,20 +20,24 @@ type U3<'a, 'b, 'c> =
 type U2StopLocation =
     | Stop of Stop
     | Location of Location
+    | Empty
 
 type U2StationStop =
     | Station of Station
     | Stop of Stop
+    | Empty
 
 type U3StationStopLocation =
     | Station of Station
     | Stop of Stop
     | Location of Location
+    | Empty
 
 type U2HintWarning =
     | Hint of Hint
     | Status of Hint
     | Warning of Warning
+    | Empty
 
 /// A ProductType relates to how a means of transport "works" in local context.
 /// Example: Even though S-Bahn and U-Bahn in Berlin are both trains, they have different operators, service patterns,
@@ -59,6 +64,7 @@ type Profile = {
     journeysWalkingSpeed: bool option
     tripsByName: bool option
     remarks: bool option
+    remarksGetPolyline: bool option
     lines: bool option
 }
 /// A location object is used by other items to indicate their locations.
@@ -96,6 +102,7 @@ type Station = {
     station: Station option
     location: Location option
     products: Products option
+    lines: array<Line> option
     isMeta: bool option
     /// region ids
     regions: array<string> option
@@ -115,6 +122,7 @@ type Stop = {
     id: string option
     name: string option
     location: Location option
+    station: Station option
     products: Products option
     lines: array<Line> option
     isMeta: bool option
@@ -197,7 +205,7 @@ type Hint = {
 }
 type Warning = {
     ``type``: string option
-    id: float option
+    id: string option
     icon: string option
     summary: string option
     text: string
@@ -221,7 +229,7 @@ type Geometry = {
 }
 type Feature = {
     ``type``: string option
-    properties: U2StationStop option
+    properties: obj
     geometry: Geometry
 }
 type FeatureCollection = {
@@ -233,7 +241,7 @@ type StopOver = {
     stop: U2StationStop
     /// null, if last stopOver of trip
     departure: string option
-    departureDelay: float option
+    departureDelay: int option
     prognosedDeparture: string option
     plannedDeparture: string option
     departurePlatform: string option
@@ -241,7 +249,7 @@ type StopOver = {
     plannedDeparturePlatform: string option
     /// null, if first stopOver of trip
     arrival: string option
-    arrivalDelay: float option
+    arrivalDelay: int option
     prognosedArrival: string option
     plannedArrival: string option
     arrivalPlatform: string option
@@ -259,14 +267,14 @@ type Trip = {
     departure: string option
     plannedDeparture: string option
     prognosedArrival: string option
-    departureDelay: float option
+    departureDelay: int option
     departurePlatform: string option
     prognosedDeparturePlatform: string option
     plannedDeparturePlatform: string option
     arrival: string option
     plannedArrival: string option
     prognosedDeparture: string option
-    arrivalDelay: float option
+    arrivalDelay: int option
     arrivalPlatform: string option
     prognosedArrivalPlatform: string option
     plannedArrivalPlatform: string option
@@ -296,12 +304,13 @@ type Price = {
 type Alternative = {
     tripId: string
     direction: string option
+    location: Location option
     line: Line option
     stop: U2StationStop option
     ``when``: string option
     plannedWhen: string option
     prognosedWhen: string option
-    delay: float option
+    delay: int option
     platform: string option
     plannedPlatform: string option
     prognosedPlatform: string option
@@ -311,6 +320,8 @@ type Alternative = {
     provenance: string option
     previousStopovers: array<StopOver> option
     nextStopovers: array<StopOver> option
+    frames: array<Frame> option
+    polyline: FeatureCollection option
 }
 /// Leg of journey
 type Leg = {
@@ -320,14 +331,14 @@ type Leg = {
     departure: string option
     plannedDeparture: string option
     prognosedArrival: string option
-    departureDelay: float option
+    departureDelay: int option
     departurePlatform: string option
     prognosedDeparturePlatform: string option
     plannedDeparturePlatform: string option
     arrival: string option
     plannedArrival: string option
     prognosedDeparture: string option
-    arrivalDelay: float option
+    arrivalDelay: int option
     arrivalPlatform: string option
     prognosedArrivalPlatform: string option
     plannedArrivalPlatform: string option
@@ -388,7 +399,7 @@ type Movement = {
 type ServerInfo = {
     timetableStart: string option
     timetableEnd: string option
-    serverTime: U2<string,float> option
+    serverTime: string option
     realtimeDataUpdatedAt: float option
 }
 type JourneysOptions = {
@@ -407,7 +418,7 @@ type JourneysOptions = {
     /// return stations on the way?
     stopovers: bool option
     /// Maximum nr of transfers. Default: Let HAFAS decide.
-    transfers: float option
+    transfers: int option
     /// minimum time for a single transfer in minutes
     transferTime: int option
     /// 'none', 'partial' or 'complete'
@@ -504,6 +515,8 @@ type DeparturesArrivalsOptions = {
     stopovers: bool option
     /// departures at related stations
     includeRelatedStations: bool option
+    /// products
+    products: Products option
     /// language
     language: string option
 }
@@ -554,6 +567,8 @@ type ReachableFromOptions = {
     subStops: bool option
     /// parse & expose entrances of stops/stations?
     entrances: bool option
+    /// return leg shapes?
+    polylines: bool option
 }
 type BoundingBox = {
     north: float
@@ -589,6 +604,8 @@ type RemarksOptions = {
     /// maximum number of remarks
     results: int option
     products: Products option
+    /// return leg shapes? (not supported by all endpoints)
+    polylines: bool option
     /// Language of the results
     language: string option
 }
@@ -651,4 +668,127 @@ type HintType =
 type WarningType = 
     | Status
     | Warning
+/// Defaults
+
+let defaultLocationsOptions: LocationsOptions =
+    { fuzzy = Some true
+      results = Some 5
+      stops = Some true
+      addresses = Some true
+      poi = Some true
+      subStops = Some true
+      entrances = Some true
+      linesOfStops = Some false
+      language = Some "en" }
+
+let defaultJourneysOptions: JourneysOptions =
+    { departure = Some System.DateTime.Now
+      arrival = None
+      earlierThan = None
+      laterThan = None
+      results = Some 3
+      via = None
+      stopovers = Some true
+      transfers = Some -1
+      transferTime = Some 0
+      accessibility = Some "none"
+      bike = Some false
+      products = None
+      tickets = Some false
+      polylines = Some false
+      subStops = Some true
+      entrances = Some true
+      remarks = Some true
+      walkingSpeed = Some "normal"
+      startWithWalking = Some true
+      language = Some "en"
+      scheduledDays = Some false
+      ``when`` = None }
+
+let defaultLocation: Location =
+    { ``type`` = Some "location"
+      id = None
+      name = None
+      poi = None
+      address = None
+      longitude = None
+      latitude = None
+      altitude = None
+      distance = None }
+
+let defaultStop: Stop =
+    { ``type`` = Some "stop"
+      id = None
+      name = None
+      location = None
+      station = None
+      products = None
+      lines = None
+      isMeta = None
+      reisezentrumOpeningHours = None
+      ids = None
+      loadFactor = None
+      entrances = None
+      transitAuthority = None
+      distance = None }
+
+let defaultStation: Station =
+    { ``type`` = Some "station"
+      id = None
+      name = None
+      station = None
+      location = None
+      products = None
+      isMeta = None
+      regions = None
+      lines = None
+      facilities = None
+      reisezentrumOpeningHours = None
+      stops = None
+      entrances = None
+      transitAuthority = None
+      distance = None }
+
+let defaultLeg: Leg =
+    { tripId = None
+      origin = U2StationStop.Empty
+      destination = U2StationStop.Empty
+      departure = None
+      plannedDeparture = None
+      prognosedArrival = None
+      departureDelay = None
+      departurePlatform = None
+      prognosedDeparturePlatform = None
+      plannedDeparturePlatform = None
+      arrival = None
+      plannedArrival = None
+      prognosedDeparture = None
+      arrivalDelay = None
+      arrivalPlatform = None
+      prognosedArrivalPlatform = None
+      plannedArrivalPlatform = None
+      stopovers = None
+      schedule = None
+      price = None
+      operator = None
+      direction = None
+      line = None
+      reachable = None
+      cancelled = None
+      walking = None
+      loadFactor = None
+      distance = None
+      ``public`` = None
+      transfer = None
+      cycle = None
+      alternatives = None
+      polyline = None
+      remarks = None }
+
+let defaultJourneys: Journeys =
+    { earlierRef = None
+      laterRef = None
+      journeys = None
+      realtimeDataFrom = None }
+
 

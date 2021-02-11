@@ -52,6 +52,7 @@ let excludesType (name: string) =
 
 let options: Transformer.TransformerOptions =
     { prelude = Some prelude
+      postlude = None
       escapeIdent = escapeIdent
       transformType = transformType
       excludesType = excludesType

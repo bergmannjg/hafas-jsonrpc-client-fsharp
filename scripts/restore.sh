@@ -10,11 +10,13 @@ rm -rf node_modules
 mkdir node_modules
 
 # import hafas-client types
-wget -q https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/hafas-client/index.d.ts
+# wget -q https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/hafas-client/index.d.ts
+wget -q https://raw.githubusercontent.com/bergmannjg/hafas-client/add-types-in-jsdoc/index.d.ts
 mkdir node_modules/@types
 mkdir node_modules/@types/hafas-client
 
 sed -i '/CreateClient.IExports/d' index.d.ts
+sed -i 's/: Array/: ReadonlyArray/' index.d.ts
 mv index.d.ts node_modules/@types/hafas-client/index.d.ts
 
 npx ts2fable node_modules/@types/hafas-client/index.d.ts HafasClientTypes.fs

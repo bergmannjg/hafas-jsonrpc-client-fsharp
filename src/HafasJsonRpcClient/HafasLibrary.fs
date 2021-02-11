@@ -120,6 +120,7 @@ let getName (o: U2StationStop) =
     match o with
     | U2StationStop.Station station -> station.name
     | U2StationStop.Stop stop -> stop.name
+    | U2StationStop.Empty -> None
 
 let getJourneySummary (journey: Journey) =
     if journey.legs.Length > 0 then
@@ -140,6 +141,7 @@ let stopover2location (stopover: StopOver) =
     match stopover.stop with
     | U2StationStop.Station s -> s.location
     | U2StationStop.Stop s -> s.location
+    | U2StationStop.Empty -> None
 
 let stopover2id (stopover: StopOver) =
     match stopover.stop with

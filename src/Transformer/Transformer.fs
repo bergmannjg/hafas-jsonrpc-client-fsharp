@@ -13,6 +13,7 @@ let private checker = FSharpChecker.Create()
 
 type TransformerOptions =
     { prelude: string option
+      postlude: string option
       escapeIdent: string -> string
       transformType: string -> string
       excludesType: string -> bool
@@ -184,6 +185,7 @@ let transform (fromFile: string) (toFile: string) (options: TransformerOptions) 
         if options.prelude.IsSome then fprintfn sw "%s" options.prelude.Value
         for line in lines do
             fprintfn sw "%s" line
+        if options.postlude.IsSome then fprintfn sw "%s" options.postlude.Value
 
     | _ -> failwith "F# Interface file (*.fsi) not supported."
     fprintfn sw ""

@@ -9,6 +9,7 @@ module rec Hafas
 
 open System
 
+// type Promise<'T> = Async<'T>
 type Promise<'T> =
     abstract _catch: onrejected:option<obj -> 'T> -> Promise<'T>
     abstract _then: onfulfilled:option<'T -> 'TResult> * onrejected:option<obj -> 'TResult> -> Promise<'TResult>
@@ -25,20 +26,148 @@ type U3<'a, 'b, 'c> =
 type U2StopLocation =
     | Stop of Stop
     | Location of Location
+    | Empty
 
 type U2StationStop =
     | Station of Station
     | Stop of Stop
+    | Empty
 
 type U3StationStopLocation =
     | Station of Station
     | Stop of Stop
     | Location of Location
+    | Empty
 
 type U2HintWarning =
     | Hint of Hint
     | Status of Hint
     | Warning of Warning
+    | Empty
+"""
+
+let postlude = """/// Defaults
+
+let defaultLocationsOptions: LocationsOptions =
+    { fuzzy = Some true
+      results = Some 5
+      stops = Some true
+      addresses = Some true
+      poi = Some true
+      subStops = Some true
+      entrances = Some true
+      linesOfStops = Some false
+      language = Some "en" }
+
+let defaultJourneysOptions: JourneysOptions =
+    { departure = Some System.DateTime.Now
+      arrival = None
+      earlierThan = None
+      laterThan = None
+      results = Some 3
+      via = None
+      stopovers = Some true
+      transfers = Some -1
+      transferTime = Some 0
+      accessibility = Some "none"
+      bike = Some false
+      products = None
+      tickets = Some false
+      polylines = Some false
+      subStops = Some true
+      entrances = Some true
+      remarks = Some true
+      walkingSpeed = Some "normal"
+      startWithWalking = Some true
+      language = Some "en"
+      scheduledDays = Some false
+      ``when`` = None }
+
+let defaultLocation: Location =
+    { ``type`` = Some "location"
+      id = None
+      name = None
+      poi = None
+      address = None
+      longitude = None
+      latitude = None
+      altitude = None
+      distance = None }
+
+let defaultStop: Stop =
+    { ``type`` = Some "stop"
+      id = None
+      name = None
+      location = None
+      station = None
+      products = None
+      lines = None
+      isMeta = None
+      reisezentrumOpeningHours = None
+      ids = None
+      loadFactor = None
+      entrances = None
+      transitAuthority = None
+      distance = None }
+
+let defaultStation: Station =
+    { ``type`` = Some "station"
+      id = None
+      name = None
+      station = None
+      location = None
+      products = None
+      isMeta = None
+      regions = None
+      lines = None
+      facilities = None
+      reisezentrumOpeningHours = None
+      stops = None
+      entrances = None
+      transitAuthority = None
+      distance = None }
+
+let defaultLeg: Leg =
+    { tripId = None
+      origin = U2StationStop.Empty
+      destination = U2StationStop.Empty
+      departure = None
+      plannedDeparture = None
+      prognosedArrival = None
+      departureDelay = None
+      departurePlatform = None
+      prognosedDeparturePlatform = None
+      plannedDeparturePlatform = None
+      arrival = None
+      plannedArrival = None
+      prognosedDeparture = None
+      arrivalDelay = None
+      arrivalPlatform = None
+      prognosedArrivalPlatform = None
+      plannedArrivalPlatform = None
+      stopovers = None
+      schedule = None
+      price = None
+      operator = None
+      direction = None
+      line = None
+      reachable = None
+      cancelled = None
+      walking = None
+      loadFactor = None
+      distance = None
+      ``public`` = None
+      transfer = None
+      cycle = None
+      alternatives = None
+      polyline = None
+      remarks = None }
+
+let defaultJourneys: Journeys =
+    { earlierRef = None
+      laterRef = None
+      journeys = None
+      realtimeDataFrom = None }
 """
 
 let transformType str =
@@ -50,6 +179,7 @@ let transformType str =
     else if str = "U3<Station,Stop,obj>" then "U2StationStop"
     else if str = "U2<bool,obj>" then "Products"
     else if str = "U2<Hint,Warning>" then "U2HintWarning"
+    else if str = "U2<string,float>" then "string"
     else str
 
 let escapeIdent str =
@@ -64,6 +194,12 @@ let excludeTypes = [| "ReadonlyArray"; "IExports" |]
 
 let transformTypeVals =
     [| "transferTime", "int option"
+       "transfers", "int option"
+       "delay", "int option"
+       "departureDelay", "int option"
+       "arrivalDelay", "int option"
+       "transfers", "int option"
+       "transfers", "int option"
        "results", "int option"
        "bitmasks", "array<int>"
        "``type``", "string option" |]
@@ -93,6 +229,7 @@ let excludesType (name: string) =
 
 let options: Transformer.TransformerOptions =
     { prelude = Some prelude
+      postlude = Some postlude
       escapeIdent = escapeIdent
       transformType = transformType
       excludesType = excludesType
