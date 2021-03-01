@@ -20,7 +20,7 @@ Example use cases for the client library:
 
 The server is configured via the following options
 
-```
+```f#
 type ClientOptions =
     {
       /// path to node executable, default is "/usr/bin/node"
@@ -38,7 +38,7 @@ The (de)serialization of F# types from/to JsonRpc messages is done with the foll
 * byte -> string
   * uses [LowLevel](https://github.com/fsharp/FsAutoComplete/blob/2346b3e2f3dcfbfdb14381484879514d6f43f1f0/src/LanguageServerProtocol/LanguageServerProtocol.fs#L1691) and [Client](https://github.com/fsharp/FsAutoComplete/blob/2346b3e2f3dcfbfdb14381484879514d6f43f1f0/src/LanguageServerProtocol/LanguageServerProtocol.fs#L2418) from [FsAutoComplete](https://github.com/fsharp/FsAutoComplete/blob/master/src/LanguageServerProtocol/LanguageServerProtocol.fs)
 * string -> F# type
-  * uses [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson)
+  * uses [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) and [converters](src/HafasJsonRpcClient/JsonConverter.fs) for erased union types.
 
 ## F# type defintions from TypeScript declaration file
 

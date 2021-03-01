@@ -7,3 +7,6 @@ bin/
 obj/
 
 node_modules/
+
+HafasClientTypes.fs
+Types-hafas-client.fs

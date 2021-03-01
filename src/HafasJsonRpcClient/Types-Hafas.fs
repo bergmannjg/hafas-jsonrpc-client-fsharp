@@ -17,27 +17,20 @@ type U3<'a, 'b, 'c> =
     | Case2 of 'b
     | Case3 of 'c
 
-type U2StopLocation =
-    | Stop of Stop
-    | Location of Location
-    | Empty
+type IndexMap<'s, 'b when 's: comparison>(defaultValue: 'b) =
+    let mutable map: Map<'s, 'b> = Map.empty
 
-type U2StationStop =
-    | Station of Station
-    | Stop of Stop
-    | Empty
+    member __.Item
+        with get (s: 's) =
+            match map.TryFind s with
+            | Some v -> v
+            | None -> defaultValue
+        and set s b =
+            map <- map.Add(s, b)
+            ()
 
-type U3StationStopLocation =
-    | Station of Station
-    | Stop of Stop
-    | Location of Location
-    | Empty
-
-type U2HintWarning =
-    | Hint of Hint
-    | Status of Hint
-    | Warning of Warning
-    | Empty
+    member __.Keys =
+        map |> Seq.map (fun kv -> kv.Key) |> Seq.toArray
 
 /// A ProductType relates to how a means of transport "works" in local context.
 /// Example: Even though S-Bahn and U-Bahn in Berlin are both trains, they have different operators, service patterns,
@@ -80,8 +73,8 @@ type Location = {
     distance: float option
 }
 /// Each public transportation network exposes its products as boolean properties. See {@link ProductType}
-type Products = Map<string, bool>
-type Facilities = Map<string, string>
+type Products = IndexMap<string, bool>
+type Facilities = IndexMap<string, string>
 type ReisezentrumOpeningHours = {
     Mo: string option
     Di: string option
@@ -108,13 +101,13 @@ type Station = {
     regions: array<string> option
     facilities: Facilities option
     reisezentrumOpeningHours: ReisezentrumOpeningHours option
-    stops: array<U3StationStopLocation> option
+    stops: array<U3<Station,Stop,Location>> option
     entrances: array<Location> option
     transitAuthority: string option
     distance: float option
 }
 /// Ids of a Stop, i.e. dhid as 'DELFI Haltestellen ID'
-type Ids = Map<string, string>
+type Ids = IndexMap<string, string>
 /// A stop is a single small point or structure at which vehicles stop.
 /// A stop always belongs to a station. It may for example be a sign, a basic shelter or a railway platform.
 type Stop = {
@@ -203,20 +196,27 @@ type Hint = {
     text: string
     tripId: string option
 }
+type Status = {
+    ``type``: string option
+    code: string option
+    summary: string option
+    text: string
+    tripId: string option
+}
 type Warning = {
     ``type``: string option
     id: string option
     icon: string option
     summary: string option
     text: string
-    category: string option
+    category: U2<string,float> option
     priority: float option
     products: Products option
     edges: array<obj option> option
     events: array<obj option> option
-    validFrom: string option
-    validUntil: string option
-    modified: string option
+    validFrom: U2<string,float> option
+    validUntil: U2<string,float> option
+    modified: U2<string,float> option
     company: obj option
     categories: array<obj option> option
     affectedLines: array<Line> option
@@ -238,7 +238,7 @@ type FeatureCollection = {
 }
 /// A stopover represents a vehicle stopping at a stop/station at a specific time.
 type StopOver = {
-    stop: U2StationStop
+    stop: U2<Station,Stop> option
     /// null, if last stopOver of trip
     departure: string option
     departureDelay: int option
@@ -255,15 +255,15 @@ type StopOver = {
     arrivalPlatform: string option
     prognosedArrivalPlatform: string option
     plannedArrivalPlatform: string option
-    remarks: array<U2HintWarning> option
+    remarks: array<U3<Hint,Status,Warning>> option
     passBy: bool option
     cancelled: bool option
 }
 /// Trip – a vehicle stopping at a set of stops at specific times
 type Trip = {
     id: string
-    origin: U2StationStop
-    destination: U2StationStop
+    origin: U2<Station,Stop> option
+    destination: U2<Station,Stop> option
     departure: string option
     plannedDeparture: string option
     prognosedArrival: string option
@@ -294,7 +294,7 @@ type Trip = {
     cycle: Cycle option
     alternatives: array<Alternative> option
     polyline: FeatureCollection option
-    remarks: array<U2HintWarning> option
+    remarks: array<U3<Hint,Status,Warning>> option
 }
 type Price = {
     amount: float
@@ -306,7 +306,7 @@ type Alternative = {
     direction: string option
     location: Location option
     line: Line option
-    stop: U2StationStop option
+    stop: U2<Station,Stop> option
     ``when``: string option
     plannedWhen: string option
     prognosedWhen: string option
@@ -314,7 +314,7 @@ type Alternative = {
     platform: string option
     plannedPlatform: string option
     prognosedPlatform: string option
-    remarks: array<U2HintWarning> option
+    remarks: array<U3<Hint,Status,Warning>> option
     cancelled: bool option
     loadFactor: string option
     provenance: string option
@@ -326,8 +326,8 @@ type Alternative = {
 /// Leg of journey
 type Leg = {
     tripId: string option
-    origin: U2StationStop
-    destination: U2StationStop
+    origin: U2<Station,Stop> option
+    destination: U2<Station,Stop> option
     departure: string option
     plannedDeparture: string option
     prognosedArrival: string option
@@ -358,16 +358,16 @@ type Leg = {
     cycle: Cycle option
     alternatives: array<Alternative> option
     polyline: FeatureCollection option
-    remarks: array<U2HintWarning> option
+    remarks: array<U3<Hint,Status,Warning>> option
 }
-type ScheduledDays = Map<string, bool>
+type ScheduledDays = IndexMap<string, bool>
 /// A journey is a computed set of directions to get from A to B at a specific time.
 /// It would typically be the result of a route planning algorithm.
 type Journey = {
     ``type``: string option
     legs: array<Leg>
     refreshToken: string option
-    remarks: array<U2HintWarning> option
+    remarks: array<U3<Hint,Status,Warning>> option
     price: Price option
     cycle: Cycle option
     scheduledDays: ScheduledDays option
@@ -380,11 +380,11 @@ type Journeys = {
 }
 type Duration = {
     duration: float
-    stations: array<U3StationStopLocation>
+    stations: array<U3<Station,Stop,Location>>
 }
 type Frame = {
-    origin: U2StopLocation
-    destination: U2StopLocation
+    origin: U2<Stop,Location>
+    destination: U2<Stop,Location>
     t: float option
 }
 type Movement = {
@@ -399,7 +399,7 @@ type Movement = {
 type ServerInfo = {
     timetableStart: string option
     timetableEnd: string option
-    serverTime: string option
+    serverTime: U2<string,float> option
     realtimeDataUpdatedAt: float option
 }
 type JourneysOptions = {
@@ -629,11 +629,11 @@ type HafasClient = {
     /// Retrieves arrivals
     arrivals: U2<string,Station>->DeparturesArrivalsOptions option->Promise<array<Alternative>>
     /// Retrieves locations or stops
-    locations: string->LocationsOptions option->Promise<array<U3StationStopLocation>>
+    locations: string->LocationsOptions option->Promise<array<U3<Station,Stop,Location>>>
     /// Retrieves information about a stop
-    stop: string->StopOptions option->Promise<U3StationStopLocation>
+    stop: string->StopOptions option->Promise<U3<Station,Stop,Location>>
     /// Retrieves nearby stops from location
-    nearby: Location->NearByOptions option->Promise<array<U3StationStopLocation>>
+    nearby: Location->NearByOptions option->Promise<array<U3<Station,Stop,Location>>>
     /// Retrieves stations reachable within a certain time from a location
     reachableFrom: Location->ReachableFromOptions option->Promise<array<Duration>> option
     /// Retrieves all vehicles currently in an area.
@@ -668,127 +668,6 @@ type HintType =
 type WarningType = 
     | Status
     | Warning
-/// Defaults
 
-let defaultLocationsOptions: LocationsOptions =
-    { fuzzy = Some true
-      results = Some 5
-      stops = Some true
-      addresses = Some true
-      poi = Some true
-      subStops = Some true
-      entrances = Some true
-      linesOfStops = Some false
-      language = Some "en" }
-
-let defaultJourneysOptions: JourneysOptions =
-    { departure = Some System.DateTime.Now
-      arrival = None
-      earlierThan = None
-      laterThan = None
-      results = Some 3
-      via = None
-      stopovers = Some true
-      transfers = Some -1
-      transferTime = Some 0
-      accessibility = Some "none"
-      bike = Some false
-      products = None
-      tickets = Some false
-      polylines = Some false
-      subStops = Some true
-      entrances = Some true
-      remarks = Some true
-      walkingSpeed = Some "normal"
-      startWithWalking = Some true
-      language = Some "en"
-      scheduledDays = Some false
-      ``when`` = None }
-
-let defaultLocation: Location =
-    { ``type`` = Some "location"
-      id = None
-      name = None
-      poi = None
-      address = None
-      longitude = None
-      latitude = None
-      altitude = None
-      distance = None }
-
-let defaultStop: Stop =
-    { ``type`` = Some "stop"
-      id = None
-      name = None
-      location = None
-      station = None
-      products = None
-      lines = None
-      isMeta = None
-      reisezentrumOpeningHours = None
-      ids = None
-      loadFactor = None
-      entrances = None
-      transitAuthority = None
-      distance = None }
-
-let defaultStation: Station =
-    { ``type`` = Some "station"
-      id = None
-      name = None
-      station = None
-      location = None
-      products = None
-      isMeta = None
-      regions = None
-      lines = None
-      facilities = None
-      reisezentrumOpeningHours = None
-      stops = None
-      entrances = None
-      transitAuthority = None
-      distance = None }
-
-let defaultLeg: Leg =
-    { tripId = None
-      origin = U2StationStop.Empty
-      destination = U2StationStop.Empty
-      departure = None
-      plannedDeparture = None
-      prognosedArrival = None
-      departureDelay = None
-      departurePlatform = None
-      prognosedDeparturePlatform = None
-      plannedDeparturePlatform = None
-      arrival = None
-      plannedArrival = None
-      prognosedDeparture = None
-      arrivalDelay = None
-      arrivalPlatform = None
-      prognosedArrivalPlatform = None
-      plannedArrivalPlatform = None
-      stopovers = None
-      schedule = None
-      price = None
-      operator = None
-      direction = None
-      line = None
-      reachable = None
-      cancelled = None
-      walking = None
-      loadFactor = None
-      distance = None
-      ``public`` = None
-      transfer = None
-      cycle = None
-      alternatives = None
-      polyline = None
-      remarks = None }
-
-let defaultJourneys: Journeys =
-    { earlierRef = None
-      laterRef = None
-      journeys = None
-      realtimeDataFrom = None }
 
 

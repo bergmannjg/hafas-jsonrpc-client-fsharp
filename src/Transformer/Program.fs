@@ -7,6 +7,7 @@ let main argv =
         let options: Transformer.TransformerOptions =
             match target with
             | "Hafas" -> HafasOptions.options
+            | "FsHafas" -> FsHafasOptions.options
             | "RailwayRoute" -> RailwayRouteOptions.options
             | _ -> failwith "unknown target"
 

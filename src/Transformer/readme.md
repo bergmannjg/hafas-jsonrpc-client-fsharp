@@ -58,7 +58,7 @@ type Station =
       regions: array<string> option
       facilities: Facilities option
       reisezentrumOpeningHours: ReisezentrumOpeningHours option
-      stops: array<U3StationStopLocation> option
+      stops: array<U3<Station,Stop,Location>> option
       entrances: array<Location> option
       transitAuthority: string option
       distance: float option }

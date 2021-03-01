@@ -6,6 +6,8 @@ if [ ! -d "./scripts" ]; then
 fi
 
 rm -rf node_modules
+rm -f HafasClientTypes.fs
+# rm -f index.d.ts
 
 mkdir node_modules
 
@@ -21,6 +23,8 @@ mv index.d.ts node_modules/@types/hafas-client/index.d.ts
 
 npx ts2fable node_modules/@types/hafas-client/index.d.ts HafasClientTypes.fs
 sed -i '/CreateClient.IExports/d' HafasClientTypes.fs
+
+dotnet run --project src/Transformer/Transformer.fsproj FsHafas HafasClientTypes.fs Types-hafas-client.fs
 
 dotnet run --project src/Transformer/Transformer.fsproj Hafas HafasClientTypes.fs src/HafasJsonRpcClient/Types-Hafas.fs
 

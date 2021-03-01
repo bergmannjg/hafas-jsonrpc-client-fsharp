@@ -78,9 +78,9 @@ let getIdOfFirstStop (response: LocationsResponse option) =
     match response with
     | Some realstops when realstops.Length > 0 ->
         match realstops.[0] with
-        | Station station -> station.id
-        | Stop stop when stop.id.IsSome -> Some stop.id.Value
-        | Location location -> location.id
+        | U3.Case1 station -> station.id
+        | U3.Case2 stop when stop.id.IsSome -> Some stop.id.Value
+        | U3.Case3 location -> location.id
         | _ -> None
     | _ -> None
 
@@ -116,16 +116,17 @@ let getJourneys (client: Client) (from: string) (``to``: string) (options: Journ
     client.SendReceive(serializeJourneysRequest (createJourneyParams from ``to`` realoptions))
     |> parseJourneysResponse
 
-let getName (o: U2StationStop) =
+let getName (o: U2<Station, Stop> option) =
     match o with
-    | U2StationStop.Station station -> station.name
-    | U2StationStop.Stop stop -> stop.name
-    | U2StationStop.Empty -> None
+    | Some (U2.Case1 station) -> station.name
+    | Some (U2.Case2 stop) -> stop.name
+    | _ -> None
 
 let getJourneySummary (journey: Journey) =
     if journey.legs.Length > 0 then
         let legO = journey.legs.[0]
         let legD = journey.legs.[journey.legs.Length - 1]
+
         match (getName legO.origin), legO.plannedDeparture, (getName legD.destination), legD.plannedArrival with
         | Some o, Some dep, Some d, Some ar ->
             Some
@@ -139,14 +140,14 @@ let getJourneySummary (journey: Journey) =
 
 let stopover2location (stopover: StopOver) =
     match stopover.stop with
-    | U2StationStop.Station s -> s.location
-    | U2StationStop.Stop s -> s.location
-    | U2StationStop.Empty -> None
+    | Some (U2.Case1 s) -> s.location
+    | Some (U2.Case2 s) -> s.location
+    | _ -> None
 
 let stopover2id (stopover: StopOver) =
     match stopover.stop with
-    | U2StationStop.Station s -> s.id
-    | U2StationStop.Stop s when s.id.IsSome -> Some s.id.Value
+    | Some (U2.Case1 s) -> s.id
+    | Some (U2.Case2 s) when s.id.IsSome -> Some s.id.Value
     | _ -> None
 
 let location2lonlat (loc: Location) =
@@ -159,20 +160,22 @@ let location2lonlat (loc: Location) =
 
 let getJourneyIds (journey: Journey) =
     journey.legs
-    |> Array.collect (fun leg ->
-        match leg.stopovers with
-        | Some stopovers -> stopovers |> Array.choose stopover2id
-        | None -> Array.empty)
+    |> Array.collect
+        (fun leg ->
+            match leg.stopovers with
+            | Some stopovers -> stopovers |> Array.choose stopover2id
+            | None -> Array.empty)
 
 let getJourneyLocations (journey: Journey) =
     journey.legs
-    |> Array.collect (fun leg ->
-        match leg.stopovers with
-        | Some stopovers ->
-            stopovers
-            |> Array.choose stopover2location
-            |> Array.choose location2lonlat
-        | None -> Array.empty)
+    |> Array.collect
+        (fun leg ->
+            match leg.stopovers with
+            | Some stopovers ->
+                stopovers
+                |> Array.choose stopover2location
+                |> Array.choose location2lonlat
+            | None -> Array.empty)
 
 let defaultTripOptions =
     { stopovers = Some true
@@ -191,16 +194,21 @@ let getTrip (client: Client) (id: string) (name: string) (options: TripOptions o
 
 let getTripSummary (maybeTrip: Trip option) =
     maybeTrip
-    |> Option.map (fun trip ->
-        match (getName trip.origin), trip.plannedDeparture, (getName trip.destination), trip.plannedArrival, trip.line with
-        | Some o, Some dep, Some d, Some ar, Some line ->
-            Some
-                { line = line.name
-                  origin = o
-                  departure = dep
-                  destination = d
-                  arrival = ar }
-        | _ -> None)
+    |> Option.map
+        (fun trip ->
+            match (getName trip.origin),
+                  trip.plannedDeparture,
+                  (getName trip.destination),
+                  trip.plannedArrival,
+                  trip.line with
+            | Some o, Some dep, Some d, Some ar, Some line ->
+                Some
+                    { line = line.name
+                      origin = o
+                      departure = dep
+                      destination = d
+                      arrival = ar }
+            | _ -> None)
     |> Option.flatten
 
 let getTripLocations (maybeTrip: Trip option) =
@@ -229,7 +237,13 @@ let defaultClientOptions =
       verbose = false }
 
 let startClient (profile: Profile, options: ClientOptions) =
-    Serializer.addConverters ([| Serializer.UnionConverter<ProductTypeMode>() |])
+    Serializer.addConverters (
+        [| Serializer.UnionConverter<ProductTypeMode>()
+           Converter.U2EraseConverter<Station, Stop>(Converter.UnionCaseSelection.ByTagName "type")
+           Converter.U3EraseConverter<Station, Stop, Location>(Converter.UnionCaseSelection.ByTagName "type")
+           Converter.U3EraseConverter<Hint, Status, Warning>(Converter.UnionCaseSelection.ByTagName "type")
+           Converter.IndexMapConverter<string, bool>(false) |]
+    )
 
     let client =
         Client(options.node, options.script + " " + profile.ToString(), options.verbose)

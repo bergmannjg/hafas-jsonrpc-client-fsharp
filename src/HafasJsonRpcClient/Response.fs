@@ -21,11 +21,13 @@ let parseResponse<'a> (response: string) =
             fprintfn stderr "error: %s" error.message
             None
         | _, _ -> None
-    with ex -> None // todo
+    with ex -> 
+        fprintfn stderr "error: %s" ex.Message 
+        None// todo
 
 let parseProfileResponse (response: string) = parseResponse<Profile> (response)
 
-type LocationsResponse = array<U3StationStopLocation>
+type LocationsResponse = array<U3<Station,Stop,Location>>
 
 let parseLocationsResponse (response: string) =
     parseResponse<LocationsResponse> (response)

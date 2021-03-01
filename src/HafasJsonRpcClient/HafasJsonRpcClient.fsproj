@@ -9,6 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Types-Hafas.fs" />
+    <Compile Include="JsonConverter.fs" />
     <Compile Include="Request.fs" />
     <Compile Include="Response.fs" />
     <Compile Include="BRouter.fs" />
